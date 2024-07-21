@@ -1,0 +1,23 @@
+modLoader="javafml" #mandatory
+loaderVersion="[37,)"
+
+# The license for you mod. This is mandatory metadata and allows for easier comprehension of your redistributive properties.
+# Review your options at https://choosealicense.com/. All rights reserved is the default copyright stance, and is thus the default here.
+license="All rights reserved"
+
+[[mods]]
+modId="autodungeons"
+version="${file.jarVersion}"
+displayName="Auto Dungeon Library"
+#logoFile="examplemod.png" #optional
+authors="Skyler Manzanares"
+description='''
+Mod that lets other mods make custom dungeons easier!
+'''
+
+[[dependencies.autodungeons]]
+    modId="forge"
+    mandatory=true
+    versionRange="[37,)"
+    ordering="NONE"
+    side="BOTH"
