@@ -1,8 +1,8 @@
 package com.smanzana.autodungeons.client.overlay;
 
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.AbstractGui;
 
-public class OverlayRenderer extends GuiComponent {
+public class OverlayRenderer extends AbstractGui {
 
 	public OverlayRenderer() {
 		//MinecraftForge.EVENT_BUS.register(this);

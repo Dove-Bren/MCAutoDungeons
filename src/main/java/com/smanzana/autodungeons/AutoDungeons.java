@@ -3,9 +3,16 @@ package com.smanzana.autodungeons;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.smanzana.autodungeons.listener.DungeonTracker;
 import com.smanzana.autodungeons.proxy.ClientProxy;
 import com.smanzana.autodungeons.proxy.CommonProxy;
+import com.smanzana.autodungeons.world.NostrumKeyRegistry;
 
+import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 
@@ -20,9 +27,9 @@ public class AutoDungeons
 	private static AutoDungeons instance;
 	
 	private CommonProxy proxy;
-//	private AutoDungeonsManager petCommandManager;
-//	private MovementListener movementListener;
-//	private TargetListener targetListener;
+	private DungeonTracker dungeonTracker;
+
+	private static NostrumKeyRegistry worldKeys;
 //
 //	private final TargetManager serverTargetManager;
 //	private final TargetManager clientTargetManager;
@@ -31,70 +38,44 @@ public class AutoDungeons
 		instance = this;
 		
 		proxy = DistExecutor.safeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
-		
-//		(new ModConfig()).register();
-//		
-//		serverTargetManager = new TargetManager();
-//		clientTargetManager = new TargetManager();
-//		
-//		MinecraftForge.EVENT_BUS.register(this);
-//		movementListener = new MovementListener();
-//		targetListener = new TargetListener();
-//		MinecraftForge.EVENT_BUS.addListener(BoundIronGolemEntity::EntityInteractListener);
+		dungeonTracker = DistExecutor.safeRunForDist(() -> DungeonTracker.Client::new, () -> DungeonTracker::new);;
+
+		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
 	public static CommonProxy GetProxy() {
 		return instance.proxy;
 	}
 	
-//	public static AutoDungeonsManager GetAutoDungeonsManager() {
-//		if (instance.petCommandManager == null) {
-//			if (instance.proxy.isServer()) {
-//				throw new RuntimeException("Accessing AutoDungeonsManager before a world has been loaded!");
-//			} else {
-//				instance.petCommandManager = new AutoDungeonsManager();
-//			}
-//		}
-//		return instance.petCommandManager;
-//	}
-//	
-//	public static MovementListener GetMovementListener() {
-//		return instance.movementListener;
-//	}
-//	
-//	public static TargetListener GetTargetListener() {
-//		return instance.targetListener;
-//	}
-//	
-//	public static TargetManager GetServerTargetManager() {
-//		return instance.serverTargetManager;
-//	}
-//	
-//	public static TargetManager GetClientTargetManager() {
-//		return instance.clientTargetManager;
-//	}
+	public static NostrumKeyRegistry GetWorldKeys() {
+		if (worldKeys == null) {
+			if (instance.proxy.isServer()) {
+				throw new RuntimeException("Accessing WorldKeys before a world has been loaded!");
+			} else {
+				worldKeys = new NostrumKeyRegistry();
+			}
+		}
+		return worldKeys;
+	}
+
+	public static DungeonTracker GetDungeonTracker() {
+		return instance.dungeonTracker;
+	}
 	
-//	private void initAutoDungeonsManager(Level world) {
-//		petCommandManager = (AutoDungeonsManager) ((ServerLevel) world).getServer().getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(AutoDungeonsManager::Load, AutoDungeonsManager::new,
-//				AutoDungeonsManager.DATA_NAME);
-//
-//		// TODO I think this is automatic now?
-////		if (petCommandManager == null) {
-////			petCommandManager = new AutoDungeonsManager();
-////			world.getMapStorage().setData(AutoDungeonsManager.DATA_NAME, petCommandManager);
-////		}
-//	}
-//	
-//	@SubscribeEvent
-//	public void onWorldLoad(WorldEvent.Load event) {
-//		if (!event.getWorld().isClientSide()) {
-//			// force an exception here if this is wrong
-//			ServerLevel world = (ServerLevel) event.getWorld();
-//			
-//			// Do the correct initialization for persisted data
-//			//initPetSoulRegistry(world);
-//			initAutoDungeonsManager(world);
-//		}
-//	}
+	private void initWorldKeys(World world) {
+		worldKeys = (NostrumKeyRegistry) ((ServerWorld) world).getServer().getWorld(World.OVERWORLD).getSavedData().getOrCreate(NostrumKeyRegistry::new,
+				NostrumKeyRegistry.DATA_NAME);
+	}
+	
+	@SubscribeEvent
+	public void onWorldLoad(WorldEvent.Load event) {
+		if (!event.getWorld().isRemote()) {
+			// force an exception here if this is wrong
+			ServerWorld world = (ServerWorld) event.getWorld();
+			
+			// Do the correct initialization for persisted data
+			initWorldKeys(world);
+		}
+	}
 	
 }

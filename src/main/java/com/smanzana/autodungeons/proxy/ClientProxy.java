@@ -5,7 +5,7 @@ import javax.annotation.Nullable;
 import com.smanzana.autodungeons.client.overlay.OverlayRenderer;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.PlayerEntity;
 
 public class ClientProxy extends CommonProxy {
 	private OverlayRenderer overlayRenderer;
@@ -21,9 +21,14 @@ public class ClientProxy extends CommonProxy {
 	}
 	
 	@Override
-	public @Nullable Player getPlayer() {
+	public @Nullable PlayerEntity getPlayer() {
 		final Minecraft mc = Minecraft.getInstance();
 		return mc.player;
+	}
+
+	@Override
+	public boolean hasIntegratedServer() {
+		return Minecraft.getInstance().isIntegratedServerRunning();
 	}
 	
 	public OverlayRenderer getOverlayRenderer() {
