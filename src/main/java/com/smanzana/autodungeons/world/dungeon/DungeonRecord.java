@@ -5,9 +5,9 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.smanzana.autodungeons.world.dungeon.NostrumDungeon.DungeonInstance;
-import com.smanzana.autodungeons.world.dungeon.NostrumDungeon.DungeonRoomInstance;
-import com.smanzana.autodungeons.world.gen.NostrumDungeonStructure;
+import com.smanzana.autodungeons.world.dungeon.Dungeon.DungeonInstance;
+import com.smanzana.autodungeons.world.dungeon.Dungeon.DungeonRoomInstance;
+import com.smanzana.autodungeons.world.gen.DungeonStructure;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.RegistryKey;
@@ -15,12 +15,12 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 
 public final class DungeonRecord {
-	public final @Nonnull NostrumDungeonStructure structure;
+	public final @Nonnull DungeonStructure structure;
 	public final @Nonnull DungeonInstance instance;
 	public final DungeonRoomInstance currentRoom;
 //	public final List<DungeonRoomInstance> rooms;
 	
-	public DungeonRecord(NostrumDungeonStructure structure, DungeonInstance instance, DungeonRoomInstance currentRoom) {
+	public DungeonRecord(DungeonStructure structure, DungeonInstance instance, DungeonRoomInstance currentRoom) {
 		this.structure = structure;
 		this.instance = instance;
 		this.currentRoom = currentRoom;
@@ -63,7 +63,7 @@ public final class DungeonRecord {
 		
 		final @Nullable DungeonInstance instance = DungeonInstance.FromNBT(nbt.get(NBT_INSTANCE));
 		@SuppressWarnings("deprecation")
-		final NostrumDungeonStructure structure = (NostrumDungeonStructure) Registry.STRUCTURE_FEATURE.getOptionalValue(
+		final DungeonStructure structure = (DungeonStructure) Registry.STRUCTURE_FEATURE.getOptionalValue(
 				RegistryKey.getOrCreateKey(Registry.STRUCTURE_FEATURE_KEY, new ResourceLocation(nbt.getString(NBT_STRUCTURE))))
 				.orElseThrow(() -> new RuntimeException("Failed to look up structure with key " + nbt.getString(NBT_STRUCTURE)));
 		//final List<DungeonRoomInstance> rooms = NetUtils.FromNBT(new ArrayList<DungeonRoomInstance>(), (ListNBT) nbt.get(NBT_ROOMS), (tag) -> DungeonRoomInstance.fromNBT((CompoundNBT) tag));

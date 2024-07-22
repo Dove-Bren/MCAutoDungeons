@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 import com.smanzana.autodungeons.listener.DungeonTracker;
 import com.smanzana.autodungeons.proxy.ClientProxy;
 import com.smanzana.autodungeons.proxy.CommonProxy;
-import com.smanzana.autodungeons.world.NostrumKeyRegistry;
+import com.smanzana.autodungeons.world.WorldKeyRegistry;
 
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -29,7 +29,7 @@ public class AutoDungeons
 	private CommonProxy proxy;
 	private DungeonTracker dungeonTracker;
 
-	private static NostrumKeyRegistry worldKeys;
+	private static WorldKeyRegistry worldKeys;
 //
 //	private final TargetManager serverTargetManager;
 //	private final TargetManager clientTargetManager;
@@ -47,12 +47,12 @@ public class AutoDungeons
 		return instance.proxy;
 	}
 	
-	public static NostrumKeyRegistry GetWorldKeys() {
+	public static WorldKeyRegistry GetWorldKeys() {
 		if (worldKeys == null) {
 			if (instance.proxy.isServer()) {
 				throw new RuntimeException("Accessing WorldKeys before a world has been loaded!");
 			} else {
-				worldKeys = new NostrumKeyRegistry();
+				worldKeys = new WorldKeyRegistry();
 			}
 		}
 		return worldKeys;
@@ -63,8 +63,8 @@ public class AutoDungeons
 	}
 	
 	private void initWorldKeys(World world) {
-		worldKeys = (NostrumKeyRegistry) ((ServerWorld) world).getServer().getWorld(World.OVERWORLD).getSavedData().getOrCreate(NostrumKeyRegistry::new,
-				NostrumKeyRegistry.DATA_NAME);
+		worldKeys = (WorldKeyRegistry) ((ServerWorld) world).getServer().getWorld(World.OVERWORLD).getSavedData().getOrCreate(WorldKeyRegistry::new,
+				WorldKeyRegistry.DATA_NAME);
 	}
 	
 	@SubscribeEvent

@@ -187,26 +187,7 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 		if (exits != null) {
 			ret = new ArrayList<>(exits.size());
 			for (BlueprintLocation door : exits) {
-				
-//				final BlueprintLocation relative = NostrumDungeon.asRotated(start, door.getPos(), door.getFacing()); 
-//				ret.add(relative);
-				
 				ret.add(BlueprintToRoom(door, getBlueprint().getEntry(), start));
-				
-				
-				
-				
-//				Direction doorDir = door.getFacing();
-//				int times = (modDir.getHorizontalIndex() + 2) % 4;
-//				while (times-- > 0) {
-//					doorDir = doorDir.rotateY();
-//				}
-//				final DungeonExitPoint fromEntry = new DungeonExitPoint(
-//						IBlueprint.ApplyRotation(door.getPos(), modDir),
-//						doorDir
-//						);
-//				final DungeonExitPoint relative = new DungeonExitPoint(start.getPos().add(fromEntry.getPos()), fromEntry.getFacing()); 
-//				ret.add(relative);
 			}
 		} else {
 			ret = new LinkedList<>();
@@ -227,7 +208,6 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 	@Override
 	public BlueprintLocation getDoorLocation(BlueprintLocation start) {
 		return BlueprintToRoom(largeKeyDoor, blueprint.getEntry(), start);
-		//return NostrumDungeon.asRotated(start, largeKeyDoor.getPos(), largeKeyDoor.getFacing());
 	}
 
 	@Override
@@ -239,7 +219,6 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 	public BlueprintLocation getKeyLocation(BlueprintLocation start) {
 		BlueprintLocation orig = largeKeySpots.get(0);
 		return BlueprintToRoom(orig, blueprint.getEntry(), start);
-		//return NostrumDungeon.asRotated(start, orig.getPos(), orig.getFacing());
 	}
 	
 	@Override
@@ -250,43 +229,11 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 	@Override
 	public List<BlueprintLocation> getTreasureLocations(BlueprintLocation start) {
 //		// See note about dungeon vs blueprint facing in @getExits
-//		
-//		// Blueprint exits are rotated to the entry entry direction (and have their own rotation too).
-//		final Direction modDir = RoomBlueprint.getModDir(blueprint.getEntry().getFacing().getOpposite(), start.getFacing());
-//		// Door offset and final rotation is what's in exits rotated modDir times
-//		
-//		List<DungeonExitPoint> ret;
-//		if (chestsRelative != null) {
-//			ret = new ArrayList<>(chestsRelative.size());
-//			for (DungeonExitPoint chest : chestsRelative) {
-//				Direction chestDir = chest.getFacing();
-//				int times = (modDir.getHorizontalIndex() + 2) % 4;
-//				while (times-- > 0) {
-//					chestDir = chestDir.rotateY();
-//				}
-//				final DungeonExitPoint fromEntry = new DungeonExitPoint(
-//						RoomBlueprint.applyRotation(chest.getPos(), modDir),
-//						chestDir
-//						);
-//				final DungeonExitPoint relative = new DungeonExitPoint(start.getPos().add(fromEntry.getPos()), fromEntry.getFacing()); 
-//				ret.add(relative);
-//			}
-//		} else {
-//			ret = new LinkedList<>();
-//		}
-//		return ret;
-		
-		
-		
-		{
-			List<BlueprintLocation> ret = new ArrayList<>();
-			for (BlueprintLocation orig : chestsRelative) {
-				//final BlueprintLocation relative = NostrumDungeon.asRotated(start, orig.getPos(), orig.getFacing().getOpposite()); 
-				//ret.add(relative);
-				ret.add(BlueprintToRoom(orig, blueprint.getEntry(), start));
-			}
-			return ret;
+		List<BlueprintLocation> ret = new ArrayList<>();
+		for (BlueprintLocation orig : chestsRelative) {
+			ret.add(BlueprintToRoom(orig, blueprint.getEntry(), start));
 		}
+		return ret;
 	}
 	
 	@Override

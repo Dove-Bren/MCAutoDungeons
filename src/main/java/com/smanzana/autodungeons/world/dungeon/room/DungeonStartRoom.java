@@ -6,9 +6,9 @@ import java.util.UUID;
 
 import com.google.common.collect.Lists;
 import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
-import com.smanzana.autodungeons.world.dungeon.NostrumDungeon.DungeonInstance;
-import com.smanzana.autodungeons.world.dungeon.NostrumDungeon.DungeonRoomInstance;
-import com.smanzana.autodungeons.world.dungeon.NostrumDungeon.IWorldHeightReader;
+import com.smanzana.autodungeons.world.dungeon.Dungeon.DungeonInstance;
+import com.smanzana.autodungeons.world.dungeon.Dungeon.DungeonRoomInstance;
+import com.smanzana.autodungeons.world.dungeon.Dungeon.IWorldHeightReader;
 import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoomRef.DungeonLobbyRoomRef;
 import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoomRef.DungeonRoomRef;
 import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoomRef.DungeonStaircaseRoomRef;

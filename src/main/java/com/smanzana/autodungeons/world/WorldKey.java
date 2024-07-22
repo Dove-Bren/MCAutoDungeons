@@ -8,7 +8,7 @@ import com.smanzana.autodungeons.util.NetUtils;
 
 import net.minecraft.nbt.CompoundNBT;
 
-public class NostrumWorldKey {
+public class WorldKey {
 	
 	private static final String NBT_ID = "key_id";
 	;//private static final String NBT_COLOR = "color";
@@ -16,28 +16,28 @@ public class NostrumWorldKey {
 	private final UUID id;
 	;//private final int color;
 	
-	public NostrumWorldKey(@Nonnull UUID id) {;//, int colorARGB) {
+	public WorldKey(@Nonnull UUID id) {;//, int colorARGB) {
 		this.id = id;
 		;//this.color = colorARGB;
 	}
 	
-	public NostrumWorldKey() {
-		this(UUID.randomUUID());//, 0xFF000000 | NostrumMagica.rand.nextInt());
+	public WorldKey() {
+		this(UUID.randomUUID());
 	}
 	
 	/**
 	 * Takes another UUID and creates a new, unique key based on this key and the
 	 * other ID passed in.
-	 * This is intended to be deterministic such that two NostrumWorldKeys with the same underlying
+	 * This is intended to be deterministic such that two WorldKeys with the same underlying
 	 * ID can be mutated with the same second id and produce equal new keys.
 	 * @param id
 	 * @return
 	 */
-	public NostrumWorldKey mutateWithID(UUID id) {
-		return new NostrumWorldKey(NetUtils.CombineUUIDs(this.id, id));
+	public WorldKey mutateWithID(UUID id) {
+		return new WorldKey(NetUtils.CombineUUIDs(this.id, id));
 	}
 	
-	public NostrumWorldKey mutateWithKey(NostrumWorldKey other) {
+	public WorldKey mutateWithKey(WorldKey other) {
 		return mutateWithID(other.id);
 	}
 	
@@ -48,16 +48,16 @@ public class NostrumWorldKey {
 		return nbt;
 	}
 	
-	public static NostrumWorldKey fromNBT(CompoundNBT nbt) {
+	public static WorldKey fromNBT(CompoundNBT nbt) {
 		UUID id = nbt.getUniqueId(NBT_ID);
 		;//int color = nbt.getInt(NBT_COLOR);
-		return new NostrumWorldKey(id);//, color);
+		return new WorldKey(id);//, color);
 	}
 	
 	@Override
 	public boolean equals(Object o) {
-		if (o instanceof NostrumWorldKey) {
-			NostrumWorldKey other = (NostrumWorldKey) o;
+		if (o instanceof WorldKey) {
+			WorldKey other = (WorldKey) o;
 			if (other.id.equals(this.id)) {;// && other.color == this.color) {
 				return true;
 			}

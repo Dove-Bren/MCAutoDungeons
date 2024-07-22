@@ -49,8 +49,8 @@ public class DungeonRoomLoader {
 	
 	private DungeonRoomLoader() {
 		
-		this.roomSaveFolder = new File("./NostrumMagicaData/room_blueprint_captures/");
-		this.roomLoadFolder = new File("./NostrumMagicaData/room_blueprint_captures/");
+		this.roomSaveFolder = new File("./DungeonData/room_blueprint_captures/");
+		this.roomLoadFolder = new File("./DungeonData/room_blueprint_captures/");
 	}
 	
 	private static final class DungeonRoomEntry {

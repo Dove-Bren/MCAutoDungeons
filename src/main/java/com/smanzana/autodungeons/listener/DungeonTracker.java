@@ -10,7 +10,7 @@ import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.network.NetworkHandler;
 import com.smanzana.autodungeons.network.message.DungeonTrackerUpdateMessage;
 import com.smanzana.autodungeons.world.dungeon.DungeonRecord;
-import com.smanzana.autodungeons.world.gen.NostrumDungeonStructure;
+import com.smanzana.autodungeons.world.gen.DungeonStructure;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -66,7 +66,7 @@ public class DungeonTracker {
 		if (!player.isAlive()) {
 			current = null;
 		} else {
-			current = NostrumDungeonStructure.GetDungeonAt(player.getServerWorld(), player.getPosition());
+			current = DungeonStructure.GetDungeonAt(player.getServerWorld(), player.getPosition());
 		}
 		setDungeon(player, current);
 	}

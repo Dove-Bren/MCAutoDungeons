@@ -23,20 +23,20 @@ import net.minecraftforge.common.util.Constants.NBT;
  * @author Skyler
  *
  */
-public class NostrumKeyRegistry extends WorldSavedData {
+public class WorldKeyRegistry extends WorldSavedData {
 	
 	public static final String DATA_NAME = AutoDungeons.MODID + "_world_keys";
 	private static final String NBT_LIST = "key_map";
 	private static final String NBT_KEY = "key";
 	private static final String NBT_COUNT = "count";
 	
-	private final Map<NostrumWorldKey, Integer> keys;
+	private final Map<WorldKey, Integer> keys;
 	
-	public NostrumKeyRegistry() {
+	public WorldKeyRegistry() {
 		this(DATA_NAME);
 	}
 
-	public NostrumKeyRegistry(String name) {
+	public WorldKeyRegistry(String name) {
 		super(name);
 		
 		this.keys = new HashMap<>();
@@ -52,7 +52,7 @@ public class NostrumKeyRegistry extends WorldSavedData {
 			CompoundNBT keyTag = tag.getCompound(NBT_KEY);
 			final int count = tag.getInt(NBT_COUNT);
 			if (count > 0) {
-				keys.put(NostrumWorldKey.fromNBT(keyTag), count);
+				keys.put(WorldKey.fromNBT(keyTag), count);
 			}
 		}
 		
@@ -62,7 +62,7 @@ public class NostrumKeyRegistry extends WorldSavedData {
 	@Override
 	public CompoundNBT write(CompoundNBT compound) {
 		ListNBT list = new ListNBT();
-		for (Entry<NostrumWorldKey, Integer> entry : keys.entrySet()) {
+		for (Entry<WorldKey, Integer> entry : keys.entrySet()) {
 			if (entry.getValue() == null || entry.getValue() <= 0) {
 				continue;
 			}
@@ -78,25 +78,25 @@ public class NostrumKeyRegistry extends WorldSavedData {
 		return compound;
 	}
 	
-	public NostrumWorldKey addKey(NostrumWorldKey key) {
+	public WorldKey addKey(WorldKey key) {
 		keys.merge(key, 1, Integer::sum);
 		this.markDirty();
 		return key;
 	}
 	
-	public NostrumWorldKey addKey() {
-		return addKey(new NostrumWorldKey());
+	public WorldKey addKey() {
+		return addKey(new WorldKey());
 	}
 	
-	public int getKeyCount(NostrumWorldKey key) {
+	public int getKeyCount(WorldKey key) {
 		return keys.getOrDefault(key, 0);
 	}
 	
-	public boolean hasKey(NostrumWorldKey key) {
+	public boolean hasKey(WorldKey key) {
 		return getKeyCount(key) > 0;
 	}
 	
-	public boolean consumeKey(NostrumWorldKey key) {
+	public boolean consumeKey(WorldKey key) {
 		final int count = getKeyCount(key);
 		if (count > 0) {
 			if (count == 1) {

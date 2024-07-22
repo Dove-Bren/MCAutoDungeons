@@ -24,7 +24,7 @@ import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.util.ColorUtil;
 import com.smanzana.autodungeons.util.JavaUtils;
 import com.smanzana.autodungeons.util.NetUtils;
-import com.smanzana.autodungeons.world.NostrumWorldKey;
+import com.smanzana.autodungeons.world.WorldKey;
 import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomRegistry;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomRegistry.DungeonRoomRecord;
@@ -53,7 +53,7 @@ import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 
-public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> {
+public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 	
 	private static final Random rand = new Random();
 	
@@ -63,7 +63,7 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 	//private final List<IDungeonRoomRef<?>> rooms;
 	protected final IDungeonRoomRef<?> ending;
 	protected final DungeonStartRoom starting;
-	protected final NostrumDungeon self;
+	protected final Dungeon self;
 	
 	protected int color;
 	protected ResourceLocation lootTable;
@@ -72,11 +72,11 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 //	private List<Path> doorPoints;
 //	private List<Path> keyPoints; // Potential keys, that is
 	
-	public NostrumDungeon(String tag, DungeonStartRoom starting, IDungeonRoomRef<?> ending) {
+	public Dungeon(String tag, DungeonStartRoom starting, IDungeonRoomRef<?> ending) {
 		this(tag, starting, ending, 2, 3);
 	}
 	
-	public NostrumDungeon(String tag, DungeonStartRoom starting, IDungeonRoomRef<?> ending, int minPath, int randPath) {
+	public Dungeon(String tag, DungeonStartRoom starting, IDungeonRoomRef<?> ending, int minPath, int randPath) {
 		this.tag = tag;
 		self = this;
 		//rooms = new ArrayList<>();
@@ -89,7 +89,7 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 	}
 	
 	@Deprecated
-	public NostrumDungeon add(IDungeonRoomRef<?> room) {
+	public Dungeon add(IDungeonRoomRef<?> room) {
 		//rooms.add(room);
 		return this;
 	}
@@ -109,7 +109,7 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 		return ret;
 	}
 	
-	public NostrumDungeon setColor(int color) {
+	public Dungeon setColor(int color) {
 		this.color = color;
 		return this;
 	}
@@ -118,7 +118,7 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 		return this.lootTable;
 	}
 	
-	public NostrumDungeon setLootTable(ResourceLocation lootTable) {
+	public Dungeon setLootTable(ResourceLocation lootTable) {
 		this.lootTable = lootTable;
 		return this;
 	}
@@ -435,7 +435,7 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 	}
 	
 	protected static class DungeonGenerationContext {
-		public final NostrumDungeon dungeon;
+		public final Dungeon dungeon;
 		public final List<MutableBoundingBox> boundingBoxes;
 		public final Random rand;
 		public final DungeonInstance instance;
@@ -444,7 +444,7 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 		public final List<IDungeonRoomRef<?>> keyRooms;
 		public final List<IDungeonRoomRef<?>> doorRooms;
 		
-		public DungeonGenerationContext(NostrumDungeon dungeon, Random rand, DungeonInstance instance) {
+		public DungeonGenerationContext(Dungeon dungeon, Random rand, DungeonInstance instance) {
 			this.dungeon = dungeon;
 			this.rand = rand;
 			this.boundingBoxes = new ArrayList<>(32);
@@ -459,28 +459,28 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 	public static class DungeonInstance {
 		private final ResourceLocation dungeonID;
 		private final UUID instanceID;
-		private final NostrumWorldKey smallKey;
-		private final NostrumWorldKey largeKey;
+		private final WorldKey smallKey;
+		private final WorldKey largeKey;
 		
 		private static final String NBT_DUNGEON_ID = "dungeonID";
 		private static final String NBT_INSTANCE_ID = "instanceID";
 		private static final String NBT_SMALL_KEY = "smallKey";
 		private static final String NBT_LARGE_KEY = "largeKey";
 		
-		public DungeonInstance(ResourceLocation dungeonID, UUID instanceID, NostrumWorldKey smallKey, NostrumWorldKey largeKey) {
+		public DungeonInstance(ResourceLocation dungeonID, UUID instanceID, WorldKey smallKey, WorldKey largeKey) {
 			this.dungeonID = dungeonID;
 			this.instanceID = instanceID;
 			this.smallKey = smallKey;
 			this.largeKey = largeKey;
 		}
 		
-		protected DungeonInstance(NostrumDungeon dungeon, UUID instanceID, UUID keyBaseID) {
+		protected DungeonInstance(Dungeon dungeon, UUID instanceID, UUID keyBaseID) {
 			this(dungeon.getRegistryName(), instanceID,
-					new NostrumWorldKey(instanceID),
-					new NostrumWorldKey(NetUtils.CombineUUIDs(instanceID, keyBaseID)));
+					new WorldKey(instanceID),
+					new WorldKey(NetUtils.CombineUUIDs(instanceID, keyBaseID)));
 		}
 		
-		protected DungeonInstance(NostrumDungeon dungeon, UUID instanceID, Random rand) {
+		protected DungeonInstance(Dungeon dungeon, UUID instanceID, Random rand) {
 			this(dungeon, instanceID, NetUtils.CombineUUIDs(instanceID, NetUtils.RandomUUID(rand)));
 		}
 		
@@ -492,19 +492,19 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 			return this.instanceID;
 		}
 		
-		public NostrumWorldKey getSmallKey() {
+		public WorldKey getSmallKey() {
 			return smallKey;
 		}
 
-		public NostrumWorldKey getLargeKey() {
+		public WorldKey getLargeKey() {
 			return largeKey;
 		}
 
-		public static DungeonInstance Random(NostrumDungeon dungeon) {
+		public static DungeonInstance Random(Dungeon dungeon) {
 			return new DungeonInstance(dungeon, UUID.randomUUID(), UUID.randomUUID());
 		}
 		
-		public static DungeonInstance Random(NostrumDungeon dungeon, Random rand) {
+		public static DungeonInstance Random(Dungeon dungeon, Random rand) {
 			return new DungeonInstance(dungeon, NetUtils.RandomUUID(rand), rand);
 		}
 		
@@ -521,8 +521,8 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 			CompoundNBT tag = (CompoundNBT) nbt;
 			ResourceLocation loc = new ResourceLocation(tag.getString(NBT_DUNGEON_ID));
 			UUID id = tag.getUniqueId(NBT_INSTANCE_ID);
-			NostrumWorldKey smallKey = NostrumWorldKey.fromNBT(tag.getCompound(NBT_SMALL_KEY));
-			NostrumWorldKey largeKey = NostrumWorldKey.fromNBT(tag.getCompound(NBT_LARGE_KEY));
+			WorldKey smallKey = WorldKey.fromNBT(tag.getCompound(NBT_SMALL_KEY));
+			WorldKey largeKey = WorldKey.fromNBT(tag.getCompound(NBT_LARGE_KEY));
 			return new DungeonInstance(loc, id, smallKey, largeKey);
 		}
 		
@@ -551,7 +551,7 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 		private final boolean hasLargeDoor; // Whether a large key door is in this room and should et stamped to be dungeon key
 		private final DungeonInstance dungeonInstance;
 		private final UUID roomID;
-		private final NostrumDungeon dungeonTemplate;
+		private final Dungeon dungeonTemplate;
 		
 		// Puzzle mechanics that can be turned on after construction
 		private final List<BlueprintLocation> smallDoors; // What (if any) exits should have small doors
@@ -817,7 +817,7 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 		}
 		
 		protected @Nonnull IDungeonRoom pickRandomContRoom(DungeonGenerationContext context, BlueprintLocation entry, int remaining) {
-			List<IDungeonRoom> eligibleRooms = context.contRooms.stream().filter(r -> !r.getRoomID().equals(parent.myRoom.template.getRoomID())).filter(r -> r.getRoomCost() <= remaining).filter(r -> NostrumDungeon.CheckRoomBounds(r, entry, context)).collect(Collectors.toList());
+			List<IDungeonRoom> eligibleRooms = context.contRooms.stream().filter(r -> !r.getRoomID().equals(parent.myRoom.template.getRoomID())).filter(r -> r.getRoomCost() <= remaining).filter(r -> Dungeon.CheckRoomBounds(r, entry, context)).collect(Collectors.toList());
 			if (eligibleRooms.isEmpty()) {
 				AutoDungeons.LOGGER.warn("Failed to find a cont room that fit. Picking a random one for start " + entry);
 				return context.contRooms.get(rand.nextInt(context.contRooms.size()));
@@ -829,7 +829,7 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 			if (context.endRooms.isEmpty()) {
 				return getRooms().get(rand.nextInt(getRooms().size()));
 			} else {
-				List<IDungeonRoom> eligibleRooms = context.endRooms.stream().filter(r -> NostrumDungeon.CheckRoomBounds(r, entry, context)).collect(Collectors.toList());
+				List<IDungeonRoom> eligibleRooms = context.endRooms.stream().filter(r -> Dungeon.CheckRoomBounds(r, entry, context)).collect(Collectors.toList());
 				if (eligibleRooms.isEmpty()) {
 					AutoDungeons.LOGGER.warn("Failed to find an end room that fit. Picking a random one for start " + entry);
 					return context.endRooms.get(rand.nextInt(context.endRooms.size()));
@@ -839,7 +839,7 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 		}
 		
 		protected @Nonnull IDungeonRoom pickRandomKeyRoom(DungeonGenerationContext context, BlueprintLocation entry) {
-			List<IDungeonRoom> eligibleRooms = context.keyRooms.stream().filter(r -> NostrumDungeon.CheckRoomBounds(r, entry, context)).collect(Collectors.toList());
+			List<IDungeonRoom> eligibleRooms = context.keyRooms.stream().filter(r -> Dungeon.CheckRoomBounds(r, entry, context)).collect(Collectors.toList());
 			if (eligibleRooms.isEmpty()) {
 				AutoDungeons.LOGGER.warn("Failed to find a key room that fit. Picking a random one for start " + entry);
 				return context.keyRooms.get(rand.nextInt(context.keyRooms.size()));
@@ -848,7 +848,7 @@ public abstract class NostrumDungeon extends ForgeRegistryEntry<NostrumDungeon> 
 		}
 		
 		protected @Nonnull IDungeonRoom pickRandomDoorRoom(DungeonGenerationContext context, BlueprintLocation entry, int remaining) {
-			List<IDungeonRoom> eligibleRooms = context.doorRooms.stream().filter(r -> r.getRoomCost() <= remaining).filter(r -> NostrumDungeon.CheckRoomBounds(r, entry, context)).collect(Collectors.toList());
+			List<IDungeonRoom> eligibleRooms = context.doorRooms.stream().filter(r -> r.getRoomCost() <= remaining).filter(r -> Dungeon.CheckRoomBounds(r, entry, context)).collect(Collectors.toList());
 			if (eligibleRooms.isEmpty()) {
 				AutoDungeons.LOGGER.warn("Failed to find a door room that fit. Picking a random one for start " + entry);
 				return context.doorRooms.get(rand.nextInt(context.doorRooms.size()));

@@ -12,7 +12,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
 import com.smanzana.autodungeons.world.dungeon.DungeonRegistry;
-import com.smanzana.autodungeons.world.dungeon.NostrumDungeon;
+import com.smanzana.autodungeons.world.dungeon.Dungeon;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
@@ -37,8 +37,8 @@ public class CommandSpawnDungeon {
 	
 	private static final int execute(CommandContext<CommandSource> context, final String typeName) throws CommandSyntaxException {
 		
-		NostrumDungeon dungeon = null;
-		for (NostrumDungeon candidate : GetDungeons()) {
+		Dungeon dungeon = null;
+		for (Dungeon candidate : GetDungeons()) {
 			final String name = candidate.getRegistryName().toString();
 			if (name.equalsIgnoreCase(typeName)) {
 				dungeon = candidate;
@@ -53,7 +53,7 @@ public class CommandSpawnDungeon {
 		}
 	}
 
-	private static final int execute(CommandContext<CommandSource> context, final NostrumDungeon dungeon) throws CommandSyntaxException {
+	private static final int execute(CommandContext<CommandSource> context, final Dungeon dungeon) throws CommandSyntaxException {
 		if (CommandSpawnDungeon.rand == null) {
 			CommandSpawnDungeon.rand = new Random();
 		}
@@ -64,7 +64,7 @@ public class CommandSpawnDungeon {
 		return 0;
 	}
 	
-	private static final Collection<NostrumDungeon> GetDungeons() {
+	private static final Collection<Dungeon> GetDungeons() {
 		return DungeonRegistry.GetForgeRegistry().getValues();
 	}
 	

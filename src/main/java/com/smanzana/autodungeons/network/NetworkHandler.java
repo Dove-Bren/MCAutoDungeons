@@ -20,7 +20,7 @@ public class NetworkHandler {
 	
 	private static int discriminator = 10;
 	
-	private static final String CHANNEL_SYNC_NAME = "nostrum_channel";
+	private static final String CHANNEL_SYNC_NAME = "autodung_channel";
 	private static final String PROTOCOL = "1";
 	
 	public static SimpleChannel getSyncChannel() {

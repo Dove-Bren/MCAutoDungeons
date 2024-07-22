@@ -54,9 +54,9 @@ public class CommandReadRoom {
 			return 1;
 		}
 		
-		File file = new File("./NostrumMagicaData/room_blueprint_captures/" + name + ".dat");
+		File file = new File("./DungeonData/room_blueprint_captures/" + name + ".dat");
 		if (!file.exists()) {
-			file = new File("./NostrumMagicaData/room_blueprint_captures/" + name + ".gat");
+			file = new File("./DungeonData/room_blueprint_captures/" + name + ".gat");
 		}
 		if (file.exists()) {
 			CompoundNBT nbt = null;

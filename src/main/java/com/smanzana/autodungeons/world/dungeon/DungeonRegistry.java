@@ -19,21 +19,21 @@ import net.minecraftforge.registries.RegistryBuilder;
 @Mod.EventBusSubscriber(modid = AutoDungeons.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class DungeonRegistry {
 
-	public static final RegistryKey<Registry<NostrumDungeon>> KEY_REG_DUNGEON_TYPES = RegistryKey.getOrCreateRootKey(new ResourceLocation(AutoDungeons.MODID, "dungeon_type"));
+	public static final RegistryKey<Registry<Dungeon>> KEY_REG_DUNGEON_TYPES = RegistryKey.getOrCreateRootKey(new ResourceLocation(AutoDungeons.MODID, "dungeon_type"));
 	
-	private static IForgeRegistry<NostrumDungeon> REGISTRY;
+	private static IForgeRegistry<Dungeon> REGISTRY;
 	
 	@SubscribeEvent
 	public static void createRegistry(RegistryEvent.NewRegistry event) {
-		REGISTRY = new RegistryBuilder<NostrumDungeon>().setName(KEY_REG_DUNGEON_TYPES.getLocation()).setType(NostrumDungeon.class).setMaxID(Integer.MAX_VALUE - 1)
+		REGISTRY = new RegistryBuilder<Dungeon>().setName(KEY_REG_DUNGEON_TYPES.getLocation()).setType(Dungeon.class).setMaxID(Integer.MAX_VALUE - 1)
 			.disableSaving().create();
 	}
 	
-	public static final IForgeRegistry<NostrumDungeon> GetForgeRegistry() {
+	public static final IForgeRegistry<Dungeon> GetForgeRegistry() {
 		return REGISTRY;
 	}
 	
-	public static final @Nullable NostrumDungeon Get(ResourceLocation key) {
+	public static final @Nullable Dungeon Get(ResourceLocation key) {
 		return REGISTRY.getValue(key);
 	}
 	

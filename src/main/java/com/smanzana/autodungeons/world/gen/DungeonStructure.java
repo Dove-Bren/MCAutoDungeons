@@ -10,9 +10,9 @@ import com.smanzana.autodungeons.util.DimensionUtils;
 import com.smanzana.autodungeons.util.WorldUtil;
 import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
 import com.smanzana.autodungeons.world.dungeon.DungeonRecord;
-import com.smanzana.autodungeons.world.dungeon.NostrumDungeon;
-import com.smanzana.autodungeons.world.dungeon.NostrumDungeon.DungeonInstance;
-import com.smanzana.autodungeons.world.dungeon.NostrumDungeon.DungeonRoomInstance;
+import com.smanzana.autodungeons.world.dungeon.Dungeon;
+import com.smanzana.autodungeons.world.dungeon.Dungeon.DungeonInstance;
+import com.smanzana.autodungeons.world.dungeon.Dungeon.DungeonRoomInstance;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
@@ -36,7 +36,7 @@ import net.minecraft.world.gen.feature.template.TemplateManager;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.registries.ForgeRegistries;
 
-public abstract class NostrumDungeonStructure extends Structure<NoFeatureConfig> {
+public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 	
 //	public static final class NostrumDungeonConfig implements IFeatureConfig {
 //		
@@ -67,9 +67,9 @@ public abstract class NostrumDungeonStructure extends Structure<NoFeatureConfig>
 //		
 //	}
 	
-	protected final NostrumDungeon dungeon;
+	protected final Dungeon dungeon;
 	
-	public NostrumDungeonStructure(NostrumDungeon dungeon) {
+	public DungeonStructure(Dungeon dungeon) {
 		super(NoFeatureConfig.field_236558_a_);
 		this.dungeon = dungeon;
 	}
@@ -87,7 +87,7 @@ public abstract class NostrumDungeonStructure extends Structure<NoFeatureConfig>
 				};
 	}
 	
-	public NostrumDungeon getDungeon() {
+	public Dungeon getDungeon() {
 		return this.dungeon;
 	}
 	
@@ -112,7 +112,7 @@ public abstract class NostrumDungeonStructure extends Structure<NoFeatureConfig>
 		return random;
 	}
 	
-	public static final @Nullable DungeonRecord GetDungeonAt(ServerWorld world, BlockPos at, NostrumDungeonStructure structure) {
+	public static final @Nullable DungeonRecord GetDungeonAt(ServerWorld world, BlockPos at, DungeonStructure structure) {
 		// Would like to consider using GetContainingStructure() and use the start, but the start can't carry instance info through a write/read.
 		StructurePiece piece = WorldUtil.GetContainingStructurePiece(world, at, structure, true);
 		if (piece != null && piece instanceof DungeonPiece) {
@@ -126,8 +126,8 @@ public abstract class NostrumDungeonStructure extends Structure<NoFeatureConfig>
 	//private static final NostrumDungeonStructure[] TYPES = {NostrumStructures.DUNGEON_PORTAL, NostrumStructures.DUNGEON_DRAGON, NostrumStructures.DUNGEON_PLANTBOSS};
 	
 	public static final @Nullable DungeonRecord GetDungeonAt(ServerWorld world, BlockPos at) {
-		List<NostrumDungeonStructure> dungeonStructures = ForgeRegistries.STRUCTURE_FEATURES.getValues().stream().filter(s -> s instanceof NostrumDungeonStructure).map(s -> (NostrumDungeonStructure) s).collect(Collectors.toList());
-		for (NostrumDungeonStructure structure : dungeonStructures) {
+		List<DungeonStructure> dungeonStructures = ForgeRegistries.STRUCTURE_FEATURES.getValues().stream().filter(s -> s instanceof DungeonStructure).map(s -> (DungeonStructure) s).collect(Collectors.toList());
+		for (DungeonStructure structure : dungeonStructures) {
 			@Nullable DungeonRecord record = GetDungeonAt(world, at, structure);
 			if (record != null) {
 				return record;
@@ -139,12 +139,12 @@ public abstract class NostrumDungeonStructure extends Structure<NoFeatureConfig>
 	// What is basically an 'instance' of the struct in MC gen. Doesn't have to do much besides generate logical dungeon and populate children list.
 	public static class Start extends StructureStart<NoFeatureConfig> {
 		
-		private final NostrumDungeon dungeon;
+		private final Dungeon dungeon;
 		private final DungeonInstance instance;
 		
 		//private static final String NBT_INSTNACE = "dungeonInstance";
 		
-		public Start(NostrumDungeon dungeon, Structure<NoFeatureConfig> parent, int i1, int i2, MutableBoundingBox bounds, int i3, long l1) {
+		public Start(Dungeon dungeon, Structure<NoFeatureConfig> parent, int i1, int i2, MutableBoundingBox bounds, int i3, long l1) {
 			super(parent, i1, i2, bounds, i3, l1);
 			this.dungeon = dungeon;
 			this.instance = DungeonInstance.Random(dungeon, MakeRandom(i1, i2, l1));
@@ -213,10 +213,10 @@ public abstract class NostrumDungeonStructure extends Structure<NoFeatureConfig>
 	
 	public static class DungeonPieceSerializer implements IStructurePieceType {
 		
-		public static final String PIECE_ID = "nostrummagica:dungeonpiecedynamic";
+		public static final String PIECE_ID = "autodungeon:dungeonpiecedynamic";
 		public static final DungeonPieceSerializer instance = new DungeonPieceSerializer();
 		
-		private static final String NBT_DATA = "nostrumdungeondata";
+		private static final String NBT_DATA = "autodungeondata";
 
 		@Override
 		public DungeonPiece load(TemplateManager templateManager, CompoundNBT tag) {
