@@ -3,16 +3,19 @@ package com.smanzana.autodungeons.proxy;
 import javax.annotation.Nullable;
 
 import com.smanzana.autodungeons.client.overlay.OverlayRenderer;
+import com.smanzana.autodungeons.client.render.BlueprintRenderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 
 public class ClientProxy extends CommonProxy {
 	private OverlayRenderer overlayRenderer;
+	private BlueprintRenderer blueprintRenderer;
 	
 	public ClientProxy() {
 		super();
 		this.overlayRenderer = new OverlayRenderer();
+		this.blueprintRenderer = new BlueprintRenderer();
 	}
 	
 	@Override
@@ -33,5 +36,9 @@ public class ClientProxy extends CommonProxy {
 	
 	public OverlayRenderer getOverlayRenderer() {
 		return this.overlayRenderer;
+	}
+	
+	public BlueprintRenderer getBlueprintRenderer() {
+		return this.blueprintRenderer;
 	}
 }
