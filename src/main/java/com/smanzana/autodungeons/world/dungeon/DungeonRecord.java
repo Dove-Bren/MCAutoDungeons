@@ -5,8 +5,6 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.smanzana.autodungeons.world.dungeon.Dungeon.DungeonInstance;
-import com.smanzana.autodungeons.world.dungeon.Dungeon.DungeonRoomInstance;
 import com.smanzana.autodungeons.world.gen.DungeonStructure;
 
 import net.minecraft.nbt.CompoundNBT;

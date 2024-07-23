@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=north": { "model": "autodungeons:block/exit_block" },
+        "facing=east": { "model": "autodungeons:block/exit_block", "y": 90 },
+        "facing=south": { "model": "autodungeons:block/exit_block", "y": 180 },
+        "facing=west": { "model": "autodungeons:block/exit_block", "y": 270 }
+    }
+}

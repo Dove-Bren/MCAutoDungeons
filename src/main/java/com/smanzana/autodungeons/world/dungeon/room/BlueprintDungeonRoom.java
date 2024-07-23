@@ -11,6 +11,10 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.smanzana.autodungeons.AutoDungeons;
+import com.smanzana.autodungeons.block.IEntryMarker;
+import com.smanzana.autodungeons.block.IExitMarker;
+import com.smanzana.autodungeons.block.ILargeDoorMarker;
+import com.smanzana.autodungeons.block.ILargeKeyMarker;
 import com.smanzana.autodungeons.tile.IUniqueBlueprintTileEntity;
 import com.smanzana.autodungeons.world.blueprints.Blueprint;
 import com.smanzana.autodungeons.world.blueprints.BlueprintBlock;
@@ -80,21 +84,21 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 	}
 	
 	public static boolean IsDoorIndicator(BlockState state) {
-		return state != null && state.getBlock() == Blocks.REPEATER;
+		return state != null && state.getBlock() instanceof IExitMarker;
 	}
 	
 	public static boolean IsEntry(BlockState state) {
-		return state != null && state.getBlock() == Blocks.COMPARATOR;
+		return state != null && state.getBlock() instanceof IEntryMarker;
 	}
 	
 	public static boolean IsLargeKeySpot(BlockState state) {
 		return state != null
-				&& state.getBlock() == Blocks.TRAPPED_CHEST;
+				&& state.getBlock() instanceof ILargeKeyMarker;
 	}
 	
 	public static boolean IsLargeKeyDoor(BlockState state) {
 		return state != null
-				&& state.getBlock() == Blocks.BARRIER;
+				&& state.getBlock() instanceof ILargeDoorMarker;
 	}
 	
 	public static boolean IsChest(BlockState state) {

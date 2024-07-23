@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -24,7 +23,6 @@ import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.util.ColorUtil;
 import com.smanzana.autodungeons.util.JavaUtils;
 import com.smanzana.autodungeons.util.NetUtils;
-import com.smanzana.autodungeons.world.WorldKey;
 import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomRegistry;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomRegistry.DungeonRoomRecord;
@@ -33,12 +31,8 @@ import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoom;
 import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoomRef;
 import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoomRef.DungeonRoomRef;
 
-import net.minecraft.block.ChestBlock;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
@@ -50,7 +44,6 @@ import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
-import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 
 public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
@@ -221,7 +214,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 			
 			// #4
 			Set<Path> curPool = new HashSet<>();
-			root.addSelfAndChildren(curPool, p -> p.myRoom.template.supportsTreasure());
+			root.addSelfAndChildren(curPool, p -> p.myRoom.getRoomTemplate().supportsTreasure());
 			largeDoor.removeSelfAndChildren(curPool);
 			largeKey.removeSelfAndChildren(curPool);
 			if (curPool.isEmpty()) {
@@ -260,7 +253,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 				} else {
 					roomAfterDoor = rootPath.peekLast();
 				}
-				doorEntry = roomAfterDoor.myRoom.entry;
+				doorEntry = roomAfterDoor.myRoom.getEntry();
 				roomBeforeDoor = roomAfterDoor.parent;
 				
 				makeSmallDoor(roomBeforeDoor.myRoom, doorEntry, context);
@@ -456,256 +449,6 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 		}
 	}
 	
-	public static class DungeonInstance {
-		private final ResourceLocation dungeonID;
-		private final UUID instanceID;
-		private final WorldKey smallKey;
-		private final WorldKey largeKey;
-		
-		private static final String NBT_DUNGEON_ID = "dungeonID";
-		private static final String NBT_INSTANCE_ID = "instanceID";
-		private static final String NBT_SMALL_KEY = "smallKey";
-		private static final String NBT_LARGE_KEY = "largeKey";
-		
-		public DungeonInstance(ResourceLocation dungeonID, UUID instanceID, WorldKey smallKey, WorldKey largeKey) {
-			this.dungeonID = dungeonID;
-			this.instanceID = instanceID;
-			this.smallKey = smallKey;
-			this.largeKey = largeKey;
-		}
-		
-		protected DungeonInstance(Dungeon dungeon, UUID instanceID, UUID keyBaseID) {
-			this(dungeon.getRegistryName(), instanceID,
-					new WorldKey(instanceID),
-					new WorldKey(NetUtils.CombineUUIDs(instanceID, keyBaseID)));
-		}
-		
-		protected DungeonInstance(Dungeon dungeon, UUID instanceID, Random rand) {
-			this(dungeon, instanceID, NetUtils.CombineUUIDs(instanceID, NetUtils.RandomUUID(rand)));
-		}
-		
-		public ResourceLocation getDungeonID() {
-			return this.dungeonID;
-		}
-		
-		public UUID getInstanceID() {
-			return this.instanceID;
-		}
-		
-		public WorldKey getSmallKey() {
-			return smallKey;
-		}
-
-		public WorldKey getLargeKey() {
-			return largeKey;
-		}
-
-		public static DungeonInstance Random(Dungeon dungeon) {
-			return new DungeonInstance(dungeon, UUID.randomUUID(), UUID.randomUUID());
-		}
-		
-		public static DungeonInstance Random(Dungeon dungeon, Random rand) {
-			return new DungeonInstance(dungeon, NetUtils.RandomUUID(rand), rand);
-		}
-		
-		public INBT toNBT() {
-			CompoundNBT tag = new CompoundNBT();
-			tag.putString(NBT_DUNGEON_ID, this.dungeonID.toString());
-			tag.putUniqueId(NBT_INSTANCE_ID, instanceID);
-			tag.put(NBT_SMALL_KEY, this.smallKey.asNBT());
-			tag.put(NBT_LARGE_KEY, this.largeKey.asNBT());
-			return tag;
-		}
-		
-		public static DungeonInstance FromNBT(INBT nbt) {
-			CompoundNBT tag = (CompoundNBT) nbt;
-			ResourceLocation loc = new ResourceLocation(tag.getString(NBT_DUNGEON_ID));
-			UUID id = tag.getUniqueId(NBT_INSTANCE_ID);
-			WorldKey smallKey = WorldKey.fromNBT(tag.getCompound(NBT_SMALL_KEY));
-			WorldKey largeKey = WorldKey.fromNBT(tag.getCompound(NBT_LARGE_KEY));
-			return new DungeonInstance(loc, id, smallKey, largeKey);
-		}
-		
-		@Override
-		public int hashCode() {
-			return Objects.hash(dungeonID, instanceID, smallKey, largeKey);
-		}
-		
-		@Override
-		public boolean equals(Object o) {
-			if (o instanceof DungeonInstance) {
-				DungeonInstance other = (DungeonInstance) o;
-				return other.dungeonID.equals(this.dungeonID)
-						&& other.instanceID.equals(this.instanceID)
-						&& other.smallKey.equals(this.smallKey)
-						&& other.largeKey.equals(this.largeKey);
-			}
-			return false;
-		}
-	}
-	
-	public static class DungeonRoomInstance {
-		private final BlueprintLocation entry;
-		private final IDungeonRoom template;
-		private final boolean hasLargeKey; // whether the key should be in this room
-		private final boolean hasLargeDoor; // Whether a large key door is in this room and should et stamped to be dungeon key
-		private final DungeonInstance dungeonInstance;
-		private final UUID roomID;
-		private final Dungeon dungeonTemplate;
-		
-		// Puzzle mechanics that can be turned on after construction
-		private final List<BlueprintLocation> smallDoors; // What (if any) exits should have small doors
-		private boolean hasSmallKey;
-		
-		public DungeonRoomInstance(BlueprintLocation entry, IDungeonRoom template, boolean hasKey, boolean hasLargeDoor, DungeonInstance dungeonInstance, @Nonnull UUID roomID) {
-			this.entry = entry;
-			this.template = template;
-			this.hasLargeKey = hasKey;
-			this.hasLargeDoor = hasLargeDoor;
-			this.dungeonInstance = dungeonInstance;
-			this.roomID = roomID;
-			this.smallDoors = new ArrayList<>(1);
-			this.hasSmallKey = false;
-			
-			this.dungeonTemplate = DungeonRegistry.Get(dungeonInstance.getDungeonID());
-		}
-		
-		protected void addSmallDoor(BlueprintLocation exit) {
-			smallDoors.add(exit);
-		}
-		
-		protected void addSmallKey() {
-			this.hasSmallKey = true;
-		}
-
-		public MutableBoundingBox getBounds() {
-			if (this.template == null) {
-				System.out.println("null");
-			}
-			return template.getBounds(this.entry);
-		}
-		
-		public UUID getRoomID() {
-			return roomID;
-		}
-		
-		public DungeonInstance getDungeonInstance() {
-			return this.dungeonInstance;
-		}
-		
-		public void spawn(IWorld world) {
-			spawn(world, null);
-		}
-		
-		public void spawn(IWorld world, MutableBoundingBox bounds) {
-			// Spawn room template
-			template.spawn(world, this.entry, bounds, this.roomID);
-			
-			// If we have a key, do special key placement
-			if (this.hasLargeKey) {
-				BlueprintLocation keyLoc = template.getKeyLocation(this.entry);
-				if (bounds == null || bounds.isVecInside(keyLoc.getPos())) {
-					dungeonTemplate.spawnLargeKey(this, world, keyLoc);
-				}
-			}
-			if (this.hasLargeDoor) {
-				BlueprintLocation doorLoc = template.getDoorLocation(this.entry);
-				if (bounds == null || bounds.isVecInside(doorLoc.getPos())) {
-					dungeonTemplate.spawnLargeDoor(this, world, doorLoc);
-				}
-			}
-			if (this.hasSmallKey) {
-				if (!this.template.supportsTreasure()) {
-					AutoDungeons.LOGGER.fatal("Room is meant to have a small key, but has no treasure locations");
-				} else {
-					// pick small key location based on something deterministic so that it'll be the same
-					// even if we can't spawn it in this call
-					Random rand = new Random(this.roomID.getLeastSignificantBits() ^ this.roomID.getMostSignificantBits());
-					List<BlueprintLocation> treasureSpots = this.template.getTreasureLocations(this.entry);
-					BlueprintLocation spot = treasureSpots.get((int) (rand.nextFloat() * treasureSpots.size()));
-					if (bounds == null || bounds.isVecInside(spot.getPos())) {
-						dungeonTemplate.spawnSmallKey(this, world, spot);
-					}
-				}
-			}
-			for (BlueprintLocation smallDoor : this.smallDoors) {
-				if (bounds == null || bounds.isVecInside(smallDoor.getPos())) {
-					dungeonTemplate.spawnSmallDoor(this, world, smallDoor, bounds);
-				}
-			}
-
-			if (this.template.supportsTreasure()) {
-				for (BlueprintLocation lootSpot : this.template.getTreasureLocations(this.entry)) {
-					if (bounds != null && !bounds.isVecInside(lootSpot.getPos())) {
-						continue; // Will come back for you later <3
-					}
-					
-					// Dungeon generation may replace some chests with other things.
-					// Make sure it's still a chest.
-					// TODO improve this, especially since rooms are part of dungeongen not blueprints
-					if (world.getBlockState(lootSpot.getPos()).getBlock() instanceof ChestBlock) {
-						LootUtil.generateLoot(world, lootSpot.getPos(), lootSpot.getFacing(), this.dungeonTemplate.getLootTableForRoom(this));
-					}
-				}
-			}
-		}
-
-		@Override
-		public String toString() {
-			return "[" + this.entry.getPos() + "] " + this.template.getRoomID() + ": " + this.getBounds();
-		}
-		
-		private static final String NBT_ENTRY = "entry";
-		private static final String NBT_TEMPLATE = "template";
-		private static final String NBT_HASKEY = "hasKey";
-		private static final String NBT_HASDOOR = "hasLargeDoor";
-		private static final String NBT_DUNGEON_INSTANCE = "dungeonInstance";
-		private static final String NBT_ROOM_ID = "roomID";
-		private static final String NBT_HASSMALLKEY = "hasSmallKey";
-		private static final String NBT_SMALL_DOORS = "smallDoors";
-		
-		public @Nonnull CompoundNBT toNBT(@Nullable CompoundNBT tag) {
-			if (tag == null) {
-				tag = new CompoundNBT();
-			}
-			
-			tag.put(NBT_ENTRY, this.entry.toNBT());
-			tag.putString(NBT_TEMPLATE, this.template.getRoomID().toString());
-			tag.putBoolean(NBT_HASKEY, this.hasLargeKey);
-			tag.put(NBT_DUNGEON_INSTANCE, this.dungeonInstance.toNBT());
-			tag.putUniqueId(NBT_ROOM_ID, roomID);
-			tag.putBoolean(NBT_HASSMALLKEY, this.hasSmallKey);
-			tag.putBoolean(NBT_HASDOOR, this.hasLargeDoor);
-			tag.put(NBT_SMALL_DOORS, NetUtils.ToNBT(this.smallDoors, e -> e.toNBT()));
-			
-			return tag;
-		}
-		
-		public static DungeonRoomInstance fromNBT(CompoundNBT tag) {
-			final BlueprintLocation entry = BlueprintLocation.fromNBT(tag.getCompound(NBT_ENTRY));
-			final ResourceLocation templateID = new ResourceLocation(tag.getString(NBT_TEMPLATE));
-			final DungeonRoomRecord record = DungeonRoomRegistry.GetInstance().getRegisteredRoom(templateID);
-			final boolean hasKey = tag.getBoolean(NBT_HASKEY);
-			final boolean hasLargeDoor = tag.getBoolean(NBT_HASDOOR);
-			final DungeonInstance instance = DungeonInstance.FromNBT(tag.get(NBT_DUNGEON_INSTANCE));
-			final UUID roomID = tag.getUniqueId(NBT_ROOM_ID);
-			
-			if (record == null) {
-				AutoDungeons.LOGGER.error("Failed to find dungeon room instance by id " + templateID);
-			}
-			
-			final DungeonRoomInstance ret = new DungeonRoomInstance(entry, record.room, hasKey, hasLargeDoor, instance, roomID);
-			
-			ret.hasSmallKey = tag.getBoolean(NBT_HASSMALLKEY);
-			ret.smallDoors.clear();
-			if (tag.contains(NBT_SMALL_DOORS, NBT.TAG_LIST)) { // mostly just legacy support?
-				NetUtils.FromNBT(ret.smallDoors, (ListNBT) tag.get(NBT_SMALL_DOORS), nbt -> BlueprintLocation.fromNBT((CompoundNBT) nbt));
-			}
-			
-			return ret;
-		}
-	}
-	
 	// Checks if the provided room overlaps any existing bounds if it were to be spawned or would be out of world bounds
 	protected static boolean CheckRoomBounds(IDungeonRoom room, BlueprintLocation entry, DungeonGenerationContext context) {
 		MutableBoundingBox bounds = room.getBounds(entry);
@@ -817,7 +560,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 		}
 		
 		protected @Nonnull IDungeonRoom pickRandomContRoom(DungeonGenerationContext context, BlueprintLocation entry, int remaining) {
-			List<IDungeonRoom> eligibleRooms = context.contRooms.stream().filter(r -> !r.getRoomID().equals(parent.myRoom.template.getRoomID())).filter(r -> r.getRoomCost() <= remaining).filter(r -> Dungeon.CheckRoomBounds(r, entry, context)).collect(Collectors.toList());
+			List<IDungeonRoom> eligibleRooms = context.contRooms.stream().filter(r -> !r.getRoomID().equals(parent.myRoom.getRoomTemplate().getRoomID())).filter(r -> r.getRoomCost() <= remaining).filter(r -> Dungeon.CheckRoomBounds(r, entry, context)).collect(Collectors.toList());
 			if (eligibleRooms.isEmpty()) {
 				AutoDungeons.LOGGER.warn("Failed to find a cont room that fit. Picking a random one for start " + entry);
 				return context.contRooms.get(rand.nextInt(context.contRooms.size()));
@@ -899,7 +642,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 					myRoom = new DungeonRoomInstance(entry, pickRandomContRoom(context, entry, remaining), false, false, context.instance, MakeNewRoomID(context));
 				}
 				
-				this.generateChildren(context, remaining - (myRoom.template.getRoomCost()), ending, hasKey);
+				this.generateChildren(context, remaining - (myRoom.getRoomTemplate().getRoomCost()), ending, hasKey);
 			}
 		}
 		
@@ -922,20 +665,20 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 			int endI = -1;
 			
 			if (hasKey) {
-				keyI = rand.nextInt(myRoom.template.getNumExits());
+				keyI = rand.nextInt(myRoom.getRoomTemplate().getNumExits());
 			}
 			if (ending != null) {
-				endI = rand.nextInt(myRoom.template.getNumExits());
+				endI = rand.nextInt(myRoom.getRoomTemplate().getNumExits());
 			}
 			
 			if (keyI != -1 && endI != -1 && keyI == endI) {
 				// Note: can still be equal if there's one exit, but then a future child will do this same thing
 				// until eventually there are multiple exits.
-				endI = (endI + 1) % myRoom.template.getNumExits();
+				endI = (endI + 1) % myRoom.getRoomTemplate().getNumExits();
 			}
 
 			// Add subpaths based on doors
-			for (BlueprintLocation door : myRoom.template.getExits(myRoom.entry)) {
+			for (BlueprintLocation door : myRoom.getRoomTemplate().getExits(myRoom.getEntry())) {
 				Path path = new Path(this);
 				IDungeonRoom inEnd = null;
 				boolean childHasKey = false;

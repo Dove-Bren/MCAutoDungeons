@@ -10,9 +10,9 @@ import com.smanzana.autodungeons.util.DimensionUtils;
 import com.smanzana.autodungeons.util.WorldUtil;
 import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
 import com.smanzana.autodungeons.world.dungeon.DungeonRecord;
+import com.smanzana.autodungeons.world.dungeon.DungeonRoomInstance;
 import com.smanzana.autodungeons.world.dungeon.Dungeon;
-import com.smanzana.autodungeons.world.dungeon.Dungeon.DungeonInstance;
-import com.smanzana.autodungeons.world.dungeon.Dungeon.DungeonRoomInstance;
+import com.smanzana.autodungeons.world.dungeon.DungeonInstance;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
