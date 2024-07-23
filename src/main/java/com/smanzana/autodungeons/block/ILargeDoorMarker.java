@@ -14,6 +14,8 @@ import net.minecraft.world.IWorld;
  * This block, when in a dungeon-room blueprint, is where a large WorldKey door can be placed
  */
 public interface ILargeDoorMarker {
+	
+	public default boolean isLargeDoor(BlockState state) { return true; }
 
 	public void setKey(IWorld world, BlockState state, BlockPos pos, WorldKey key, DungeonRoomInstance room, @Nullable MutableBoundingBox bounds);
 	

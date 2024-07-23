@@ -127,9 +127,6 @@ public class DungeonRoomInstance {
 					continue; // Will come back for you later <3
 				}
 				
-				// Dungeon generation may replace some chests with other things.
-				// Make sure it's still a chest.
-				// TODO improve this, especially since rooms are part of dungeongen not blueprints
 				if (world.getBlockState(lootSpot.getPos()).getBlock() instanceof ChestBlock) {
 					LootUtil.generateLoot(world, lootSpot.getPos(), lootSpot.getFacing(), this.dungeonTemplate.getLootTableForRoom(this));
 				}

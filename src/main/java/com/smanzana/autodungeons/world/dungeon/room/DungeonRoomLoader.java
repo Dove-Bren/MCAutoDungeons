@@ -123,9 +123,29 @@ public class DungeonRoomLoader {
 			tags.add(list.getString(i));
 		}
 		
-		// For version bumping
-		//int unusedWarning;
-		//writeRoomAsFile(blueprint, name, weight, cost, tags);
+//		// For version bumping
+//		int unusedWarning;
+//		if (!context.source.contains("sorcery_dungeon"))
+//		{
+//			AutoDungeons.LOGGER.debug("Scanning " + context.source);
+//			blueprint.scanBlocks((BlockPos offset, BlueprintBlock block) -> {
+//				if (block.getState() != null && block.getState().getBlock() == Blocks.COMPARATOR) {
+//					BlockState state = BuiltinBlocks.entryBlock.getDefaultState();
+//					state = state.with(EntryBlock.FACING, block.getFacing().getOpposite());
+//					return BlueprintBlock.getBlueprintBlock(state, null);
+//				}
+//				
+//				if (block.getState() != null && block.getState().getBlock() == Blocks.REPEATER) {
+//					BlockState state = BuiltinBlocks.exitBlock.getDefaultState();
+//					state = state.with(ExitBlock.FACING, block.getFacing().getOpposite());
+//					return BlueprintBlock.getBlueprintBlock(state, null);
+//				}
+//				
+//				return block;
+//			});
+//			
+//			writeRoomAsFile(blueprint, name, weight, cost, tags);
+//		}
 		
 		return new DungeonRoomEntry(blueprint, id, name, tags, weight, cost);
 	}

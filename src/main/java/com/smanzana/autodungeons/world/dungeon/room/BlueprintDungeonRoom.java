@@ -84,21 +84,27 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 	}
 	
 	public static boolean IsDoorIndicator(BlockState state) {
-		return state != null && state.getBlock() instanceof IExitMarker;
+		return state != null
+				&& state.getBlock() instanceof IExitMarker
+				&& ((IExitMarker) state.getBlock()).isExit(state);
 	}
 	
 	public static boolean IsEntry(BlockState state) {
-		return state != null && state.getBlock() instanceof IEntryMarker;
+		return state != null
+				&& state.getBlock() instanceof IEntryMarker
+				&& ((IEntryMarker) state.getBlock()).isEntry(state);
 	}
 	
 	public static boolean IsLargeKeySpot(BlockState state) {
 		return state != null
-				&& state.getBlock() instanceof ILargeKeyMarker;
+				&& state.getBlock() instanceof ILargeKeyMarker
+				&& ((ILargeKeyMarker) state.getBlock()).isLargeKey(state);
 	}
 	
 	public static boolean IsLargeKeyDoor(BlockState state) {
 		return state != null
-				&& state.getBlock() instanceof ILargeDoorMarker;
+				&& state.getBlock() instanceof ILargeDoorMarker
+				&& ((ILargeDoorMarker) state.getBlock()).isLargeDoor(state);
 	}
 	
 	public static boolean IsChest(BlockState state) {

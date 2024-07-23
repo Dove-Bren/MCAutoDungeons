@@ -6,17 +6,17 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.smanzana.autodungeons.block.IDirectionalBlock;
+import com.smanzana.autodungeons.block.IEntryMarker;
+import com.smanzana.autodungeons.block.IExitMarker;
 import com.smanzana.autodungeons.block.IHorizontalBlock;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ChestBlock;
-import net.minecraft.block.ComparatorBlock;
 import net.minecraft.block.DirectionalBlock;
 import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.LadderBlock;
-import net.minecraft.block.RedstoneDiodeBlock;
 import net.minecraft.block.RedstoneWallTorchBlock;
 import net.minecraft.block.StairsBlock;
 import net.minecraft.block.WallTorchBlock;
@@ -242,14 +242,16 @@ public class BlueprintBlock {
 	public Direction getFacing() {
 		Direction ret = null;
 		Block block = state.getBlock();
-		if (block instanceof HorizontalBlock) {
-			ret = state.get(HorizontalBlock.HORIZONTAL_FACING);
-			
+		if (block instanceof IEntryMarker) {
+			ret = ((IEntryMarker) block).getFacing(state);
 			// HACK: Reverse if special enterance block cause they're backwards LOL
-			if (block instanceof RedstoneDiodeBlock || block instanceof ComparatorBlock) {
-				ret = ret.getOpposite();
-			}
-			
+			ret = ret.getOpposite();
+		} else if (block instanceof IExitMarker) {
+			ret = ((IExitMarker) block).getFacing(state);
+			// HACK: Reverse if special exit block cause they're backwards LOL
+			ret = ret.getOpposite();
+		} else if (block instanceof HorizontalBlock) {
+			ret = state.get(HorizontalBlock.HORIZONTAL_FACING);
 		} else if (block instanceof WallTorchBlock) {
 			ret = state.get(WallTorchBlock.HORIZONTAL_FACING);
 		} else if (block instanceof RedstoneWallTorchBlock) {
