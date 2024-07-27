@@ -39,6 +39,11 @@ public class ClientProxy extends CommonProxy {
 		; // don't do anything for integrated or client
 	}
 	
+	@Override
+	public void syncWorldKeys(PlayerEntity player) {
+		;
+	}
+	
 	public OverlayRenderer getOverlayRenderer() {
 		return this.overlayRenderer;
 	}

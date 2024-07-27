@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.smanzana.autodungeons.AutoDungeons;
+import com.smanzana.autodungeons.network.NetworkHandler;
+import com.smanzana.autodungeons.network.message.WorldKeySyncMessage;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -78,9 +80,14 @@ public class WorldKeyRegistry extends WorldSavedData {
 		return compound;
 	}
 	
+	protected void broadcast() {
+		NetworkHandler.sendToAll(new WorldKeySyncMessage(this));
+	}
+	
 	public WorldKey addKey(WorldKey key) {
 		keys.merge(key, 1, Integer::sum);
 		this.markDirty();
+		broadcast();
 		return key;
 	}
 	
@@ -104,6 +111,8 @@ public class WorldKeyRegistry extends WorldSavedData {
 			} else {
 				keys.put(key, count - 1);
 			}
+			markDirty();
+			broadcast();
 			return true;
 		}
 		return false;
@@ -111,5 +120,7 @@ public class WorldKeyRegistry extends WorldSavedData {
 	
 	public void clearKeys() {
 		keys.clear();
+		markDirty();
+		broadcast();
 	}
 }

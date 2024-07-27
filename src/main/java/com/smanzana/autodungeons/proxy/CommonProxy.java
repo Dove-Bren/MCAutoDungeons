@@ -2,17 +2,21 @@ package com.smanzana.autodungeons.proxy;
 
 import javax.annotation.Nullable;
 
+import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.network.NetworkHandler;
 import com.smanzana.autodungeons.network.message.DungeonRoomDataSyncMessage;
+import com.smanzana.autodungeons.network.message.WorldKeySyncMessage;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomLoader;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 
 public class CommonProxy {
 
 	public CommonProxy() {
-		
+		MinecraftForge.EVENT_BUS.addListener(this::onPlayerLogin);
 	}
 	
 	public boolean isServer() {
@@ -29,6 +33,16 @@ public class CommonProxy {
 	
 	public void syncDungeonDefinitions(PlayerEntity player) {
 		NetworkHandler.sendTo(new DungeonRoomDataSyncMessage(DungeonRoomLoader.instance()), (ServerPlayerEntity) player);
+	}
+	
+	public void syncWorldKeys(PlayerEntity player) {
+		NetworkHandler.sendTo(new WorldKeySyncMessage(AutoDungeons.GetWorldKeys()), (ServerPlayerEntity) player);
+	}
+	
+	public void onPlayerLogin(PlayerLoggedInEvent event) {
+		if (!this.hasIntegratedServer()) {
+			this.syncWorldKeys(event.getPlayer());
+		}
 	}
 	
 }

@@ -3,6 +3,7 @@ package com.smanzana.autodungeons.network;
 import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.network.message.DungeonRoomDataSyncMessage;
 import com.smanzana.autodungeons.network.message.DungeonTrackerUpdateMessage;
+import com.smanzana.autodungeons.network.message.WorldKeySyncMessage;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -48,6 +49,7 @@ public class NetworkHandler {
 		
 		syncChannel.registerMessage(discriminator++, DungeonTrackerUpdateMessage.class, DungeonTrackerUpdateMessage::encode, DungeonTrackerUpdateMessage::decode, DungeonTrackerUpdateMessage::handle);
 		syncChannel.registerMessage(discriminator++, DungeonRoomDataSyncMessage.class, DungeonRoomDataSyncMessage::encode, DungeonRoomDataSyncMessage::decode, DungeonRoomDataSyncMessage::handle);
+		syncChannel.registerMessage(discriminator++, WorldKeySyncMessage.class, WorldKeySyncMessage::encode, WorldKeySyncMessage::decode, WorldKeySyncMessage::handle);
 	}
 	
 	public static <T> void sendTo(T msg, ServerPlayerEntity player) {
