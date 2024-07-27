@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.annotation.Nullable;
+
 import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.util.AutoReloadListener;
 import com.smanzana.autodungeons.util.NBTReloadListener;
@@ -30,7 +32,6 @@ import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class DungeonRoomLoader {
 	
@@ -47,10 +48,15 @@ public class DungeonRoomLoader {
 	private static final String ROOM_ROOT_NAME = ROOM_ROOT_ID + ".gat";
 	private static final String ROOM_COMPRESSED_EXT = "gat";
 	
+	private final List<DungeonRoomEntry> loadedRooms;
+	
 	private DungeonRoomLoader() {
 		
 		this.roomSaveFolder = new File("./DungeonData/room_blueprint_captures/");
 		this.roomLoadFolder = new File("./DungeonData/room_blueprint_captures/");
+		this.loadedRooms = new ArrayList<>();
+		
+		MinecraftForge.EVENT_BUS.addListener(this::onRoomRegistration);
 	}
 	
 	private static final class DungeonRoomEntry {
@@ -76,13 +82,17 @@ public class DungeonRoomLoader {
 	private static final String NBT_WEIGHT = "weight";
 	private static final String NBT_NAME = "name";
 	private static final String NBT_COST = "cost";
+	private static final String NBT_ID = "id";
 	
-	protected static final CompoundNBT toNBT(CompoundNBT blueprintTag, String name, int weight, int cost, List<String> tags) {
+	protected static final CompoundNBT toNBT(CompoundNBT blueprintTag, @Nullable ResourceLocation ID, String name, int weight, int cost, List<String> tags) {
 		CompoundNBT nbt = new CompoundNBT();
 		nbt.putString(NBT_NAME, name);
 		nbt.putInt(NBT_WEIGHT, weight);
 		nbt.putInt(NBT_COST, cost);
 		nbt.put(NBT_BLUEPRINT, blueprintTag);
+		if (ID != null) {
+			nbt.putString(NBT_ID, ID.toString());
+		}
 		
 		ListNBT list = new ListNBT();
 		for (String tag : tags) {
@@ -102,7 +112,7 @@ public class DungeonRoomLoader {
 		return blueprint;
 	}
 	
-	public final DungeonRoomEntry loadEntryFromNBT(LoadContext context, ResourceLocation id, CompoundNBT nbt) {
+	public final DungeonRoomEntry loadEntryFromNBT(LoadContext context, @Nullable ResourceLocation idOverride, CompoundNBT nbt) {
 		Blueprint blueprint = loadBlueprintFromNBT(context, nbt);
 		
 		if (blueprint == null) {
@@ -112,6 +122,10 @@ public class DungeonRoomLoader {
 		String name = nbt.getString(NBT_NAME);
 		int weight = nbt.getInt(NBT_WEIGHT);
 		int cost = nbt.contains(NBT_COST) ? nbt.getInt(NBT_COST) : 1;
+		ResourceLocation id = nbt.contains(NBT_ID) ? new ResourceLocation(nbt.getString(NBT_ID)) : null;
+		if (idOverride != null) {
+			id = idOverride;
+		}
 		
 		// TODO join to master if this is a piece?
 		
@@ -157,7 +171,7 @@ public class DungeonRoomLoader {
 		boolean success = true;
 		
 		try {
-			CompressedStreamTools.writeCompressed(toNBT(blueprintTag, name, weight, cost, tags), new FileOutputStream(saveFile));
+			CompressedStreamTools.writeCompressed(toNBT(blueprintTag, null, name, weight, cost, tags), new FileOutputStream(saveFile));
 			//CompressedStreamTools.safeWrite(toNBT(blueprintTag, name, weight, tags), saveFile);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -215,6 +229,33 @@ public class DungeonRoomLoader {
 		
 		return success;
 	}
+
+	public void loadServerData(List<CompoundNBT> roomData) {
+		loadedRooms.clear();
+		final LoadContext context = new LoadContext("Server DataPack");
+		for (CompoundNBT tag : roomData) {
+			loadedRooms.add(loadEntryFromNBT(context, null, tag));
+		}
+		
+		DungeonRoomRegistry.GetInstance().reload();
+	}
+	
+	public List<CompoundNBT> getServerData() {
+		List<CompoundNBT> data = new ArrayList<>(loadedRooms.size());
+		for (DungeonRoomEntry room : loadedRooms) {
+			data.add(toNBT(room.blueprint.toNBTIgnoringSize(), room.id, room.name, room.weight, room.cost, room.tags));
+		}
+		return data;
+	}
+	
+	public final void onRoomRegistration(DungeonRoomRegisterEvent event) {
+		DungeonRoomRegistry registry = event.getRegistry();
+		
+		// Blueprint Rooms
+		for (DungeonRoomEntry entry : this.loadedRooms) {
+			registry.register(entry.name, new BlueprintDungeonRoom(entry.id, entry.blueprint), entry.weight, entry.cost, entry.tags);;
+		}
+	}
 	
 	private static class RoomReloadListener extends NBTReloadListener {
 		
@@ -253,16 +294,6 @@ public class DungeonRoomLoader {
 						AutoDungeons.LOGGER.warn("Took " + (now-start) + "ms to read " + entry.getKey());
 					}
 				}
-			}
-		}
-		
-		@SubscribeEvent
-		public final void onRoomRegistration(DungeonRoomRegisterEvent event) {
-			DungeonRoomRegistry registry = event.getRegistry();
-			
-			// Blueprint Rooms
-			for (DungeonRoomEntry entry : loadedRooms) {
-				registry.register(entry.name, new BlueprintDungeonRoom(entry.id, entry.blueprint), entry.weight, entry.cost, entry.tags);;
 			}
 		}
 	}
@@ -414,16 +445,6 @@ public class DungeonRoomLoader {
 				return path.substring(0, idx);
 			}
 		}
-		
-		@SubscribeEvent
-		public final void onRoomRegistration(DungeonRoomRegisterEvent event) {
-			DungeonRoomRegistry registry = event.getRegistry();
-			
-			// Blueprint Rooms
-			for (DungeonRoomEntry entry : loadedRooms) {
-				registry.register(entry.name, new BlueprintDungeonRoom(entry.id, entry.blueprint), entry.weight, entry.cost, entry.tags);;
-			}
-		}
 	}
 	
 	private static final class ReloadListenerData {
@@ -458,6 +479,10 @@ public class DungeonRoomLoader {
 		protected void apply(ReloadListenerData data, IResourceManager resourceManagerIn, IProfiler profilerIn) {
 			this.roomListener.apply(data.roomData, resourceManagerIn, profilerIn);
 			this.compListener.apply(data.compData, resourceManagerIn, profilerIn);
+			
+			DungeonRoomLoader.instance().loadedRooms.clear();
+			DungeonRoomLoader.instance().loadedRooms.addAll(this.roomListener.loadedRooms);
+			DungeonRoomLoader.instance().loadedRooms.addAll(this.compListener.loadedRooms);
 			
 			// This should not be here yet, but I can't find a good 'after data loading' event
 			DungeonRoomRegistry.GetInstance().reload();

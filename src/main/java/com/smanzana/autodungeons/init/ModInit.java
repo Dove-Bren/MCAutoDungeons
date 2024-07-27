@@ -11,6 +11,7 @@ import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomLoader.BlueprintR
 import net.minecraft.command.CommandSource;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
+import net.minecraftforge.event.OnDatapackSyncEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -37,6 +38,7 @@ public class ModInit {
     	// because they depend on data and re-fire when data is reloaded?
 		MinecraftForge.EVENT_BUS.addListener(ModInit::registerCommands);
 		MinecraftForge.EVENT_BUS.addListener(ModInit::registerDataLoaders);
+		MinecraftForge.EVENT_BUS.addListener(ModInit::syncDataEvent);
 		
 		NetworkHandler.getInstance();
 	}
@@ -55,5 +57,9 @@ public class ModInit {
 		
 		// Register data listener for dungeon rooms
 		event.addListener(new BlueprintReloadListener("rooms"));
+	}
+	
+	public static final void syncDataEvent(OnDatapackSyncEvent event) {
+		AutoDungeons.GetProxy().syncDungeonDefinitions(event.getPlayer());
 	}
 }

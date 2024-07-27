@@ -2,7 +2,12 @@ package com.smanzana.autodungeons.proxy;
 
 import javax.annotation.Nullable;
 
+import com.smanzana.autodungeons.network.NetworkHandler;
+import com.smanzana.autodungeons.network.message.DungeonRoomDataSyncMessage;
+import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomLoader;
+
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 
 public class CommonProxy {
 
@@ -20,6 +25,10 @@ public class CommonProxy {
 
 	public boolean hasIntegratedServer() {
 		return false;
+	}
+	
+	public void syncDungeonDefinitions(PlayerEntity player) {
+		NetworkHandler.sendTo(new DungeonRoomDataSyncMessage(DungeonRoomLoader.instance()), (ServerPlayerEntity) player);
 	}
 	
 }

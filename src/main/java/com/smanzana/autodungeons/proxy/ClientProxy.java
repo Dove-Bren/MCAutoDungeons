@@ -34,6 +34,11 @@ public class ClientProxy extends CommonProxy {
 		return Minecraft.getInstance().isIntegratedServerRunning();
 	}
 	
+	@Override
+	public void syncDungeonDefinitions(PlayerEntity player) {
+		; // don't do anything for integrated or client
+	}
+	
 	public OverlayRenderer getOverlayRenderer() {
 		return this.overlayRenderer;
 	}

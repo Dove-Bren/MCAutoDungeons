@@ -1,6 +1,7 @@
 package com.smanzana.autodungeons.network;
 
 import com.smanzana.autodungeons.AutoDungeons;
+import com.smanzana.autodungeons.network.message.DungeonRoomDataSyncMessage;
 import com.smanzana.autodungeons.network.message.DungeonTrackerUpdateMessage;
 
 import net.minecraft.entity.Entity;
@@ -46,10 +47,8 @@ public class NetworkHandler {
 				);
 		
 		syncChannel.registerMessage(discriminator++, DungeonTrackerUpdateMessage.class, DungeonTrackerUpdateMessage::encode, DungeonTrackerUpdateMessage::decode, DungeonTrackerUpdateMessage::handle);
+		syncChannel.registerMessage(discriminator++, DungeonRoomDataSyncMessage.class, DungeonRoomDataSyncMessage::encode, DungeonRoomDataSyncMessage::decode, DungeonRoomDataSyncMessage::handle);
 	}
-	
-	//NetworkHandler.sendTo(new ClientCastReplyMessage(false, att.getMana(), 0, null),
-	//ctx.get().getSender());
 	
 	public static <T> void sendTo(T msg, ServerPlayerEntity player) {
 		NetworkHandler.syncChannel.sendTo(msg, player.connection.getNetworkManager(), NetworkDirection.PLAY_TO_CLIENT);

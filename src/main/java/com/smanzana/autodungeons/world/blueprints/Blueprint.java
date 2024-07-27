@@ -601,6 +601,10 @@ public class Blueprint implements IBlueprint {
 		return toNBTInternal(0, MAX_BLUEPRINT_BLOCKS);
 	}
 	
+	public CompoundNBT toNBTIgnoringSize() {
+		return toNBTInternal(0, Integer.MAX_VALUE);
+	}
+	
 	public INBTGenerator toNBTWithBreakdown() {
 		if (!shouldSplit()) {
 			return new INBTGenerator() {
