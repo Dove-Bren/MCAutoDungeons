@@ -1,10 +1,10 @@
 package com.smanzana.autodungeons.block;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.state.DirectionProperty;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Mirror;
-import net.minecraft.util.Rotation;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 
 /**
  * Like HorizontalBlock but an interface

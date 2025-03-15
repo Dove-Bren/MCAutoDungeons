@@ -17,7 +17,6 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.Validate;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.util.ColorUtil;
@@ -32,17 +31,17 @@ import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoomRef;
 import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoomRef.DungeonRoomRef;
 
 import net.minecraft.client.renderer.FogRenderer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.Heightmap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 
@@ -278,7 +277,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 	// Generates and then spawns a dungeon in the world immediately.
 	// This doesn't do the normal structure spawning that works well on background threads
 	// and instead does a blocking generate + block spawning.
-	public void spawn(IWorld world, BlueprintLocation start) {
+	public void spawn(LevelAccessor world, BlueprintLocation start) {
 		DungeonInstance dungeon = new DungeonInstance(this, UUID.randomUUID(), UUID.randomUUID());
 		List<DungeonRoomInstance> dungeonInstances = generate((type, x, z) -> world.getHeight(type, x, z), start, dungeon);
 		
@@ -339,7 +338,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 		
 	}
 	
-	protected void spawnDungeonParticles(World world, PlayerEntity player) {
+	protected void spawnDungeonParticles(Level world, Player player) {
 //		Random rand = player.world.rand;
 //		final float range = 15;
 //		for (int i = 0; i < 15; i++) {
@@ -351,34 +350,33 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 //		}
 	}
 	
-	public void clientTick(World world, PlayerEntity player) {
-		if (world.getBrightness(LightType.SKY, player.blockPosition()) > 0) {
+	public void clientTick(Level world, Player player) {
+		if (world.getBrightness(LightLayer.SKY, player.blockPosition()) > 0) {
 			return;
 		}
 		
 		spawnDungeonParticles(world, player);
 	}
 	
-	@SuppressWarnings("deprecation")
-	public void setClientFogDensity(World world, PlayerEntity player, EntityViewRenderEvent.FogDensity event) {
-		final int worldLight = world.getBrightness(LightType.SKY, player.blockPosition());
+	public void setClientFogDensity(Level world, Player player, EntityViewRenderEvent.FogDensity event) {
+		final int worldLight = world.getBrightness(LightLayer.SKY, player.blockPosition());
 		if (worldLight > 4) {
 			return;
 		}
 		
 		event.setCanceled(true);
 		
-		if (player.hasEffect(Effects.BLINDNESS)) {
+		if (player.hasEffect(MobEffects.BLINDNESS)) {
 			//final Minecraft mc = Minecraft.getInstance();
 			float farPlaneDistance = event.getRenderer().getRenderDistance();
 			//final Vector3d cameraPos = event.getInfo().getProjectedView();
 			//boolean nearFog = ((ClientWorld) entity.world).effects().isFoggyAt(MathHelper.floor(cameraPos.getX()), MathHelper.floor(cameraPos.getY())) || mc.ingameGUI.getBossOverlay().shouldCreateFog();
 			
-			int i = player.getEffect(Effects.BLINDNESS).getDuration();
-			float rangeMod = MathHelper.lerp(Math.min(1.0F, (float)i / 20.0F), farPlaneDistance, 5.0F);
+			int i = player.getEffect(MobEffects.BLINDNESS).getDuration();
+			float rangeMod = Mth.lerp(Math.min(1.0F, (float)i / 20.0F), farPlaneDistance, 5.0F);
 			final float near;
 			final float far;
-			if (event.getType() == FogRenderer.FogType.FOG_SKY) {
+			if (event.getType() == FogRenderer.FogMode.FOG_SKY) {
 				near = 0.0F;
 				far = rangeMod * 0.8F;
 			} else {
@@ -386,23 +384,25 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 				far = rangeMod;
 			}
 
-			RenderSystem.fogStart(near);
-			RenderSystem.fogEnd(far);
-			RenderSystem.fogMode(GlStateManager.FogMode.LINEAR);
-			RenderSystem.setupNvFogDistance();
+//			RenderSystem.fogStart(near);
+//			RenderSystem.fogEnd(far);
+//			RenderSystem.fogMode(GlStateManager.FogMode.LINEAR);
+//			RenderSystem.setupNvFogDistance();
+			RenderSystem.setShaderFogStart(near);
+			RenderSystem.setShaderFogEnd(far);
 			net.minecraftforge.client.ForgeHooksClient.onFogRender(event.getType(), event.getInfo(), (float) event.getRenderPartialTicks(), far);
 		} else {
 			if (worldLight <= 0) {
 				event.setDensity(.03f);
 			} else {
 				final float prog = ((float) (4-worldLight) / 4f);
-				event.setDensity(MathHelper.lerp(prog, .005f, .03f));
+				event.setDensity(Mth.lerp(prog, .005f, .03f));
 			}
 		}
 	}
 	
-	public void setClientFogColor(World world, PlayerEntity player, EntityViewRenderEvent.FogColors event) {
-		final int worldLight = world.getBrightness(LightType.SKY, player.blockPosition());
+	public void setClientFogColor(Level world, Player player, EntityViewRenderEvent.FogColors event) {
+		final int worldLight = world.getBrightness(LightLayer.SKY, player.blockPosition());
 		if (worldLight > 4) {
 			return;
 		}
@@ -410,26 +410,26 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 		final float prog = Math.max(0, ((float) (4-worldLight) / 4f));
 		
 		float[] color = ColorUtil.ARGBToColor(this.color);
-		event.setRed(MathHelper.lerp(prog, event.getRed(), color[0]));
-		event.setGreen(MathHelper.lerp(prog, event.getRed(), color[1]));
-		event.setBlue(MathHelper.lerp(prog, event.getRed(), color[2]));
+		event.setRed(Mth.lerp(prog, event.getRed(), color[0]));
+		event.setGreen(Mth.lerp(prog, event.getRed(), color[1]));
+		event.setBlue(Mth.lerp(prog, event.getRed(), color[2]));
 	}
 	
-	protected abstract void spawnLargeKey(DungeonRoomInstance instance, IWorld world, BlueprintLocation keyLocation);
+	protected abstract void spawnLargeKey(DungeonRoomInstance instance, LevelAccessor world, BlueprintLocation keyLocation);
 	
-	protected abstract void spawnLargeDoor(DungeonRoomInstance instance, IWorld world, BlueprintLocation doorLocation);
+	protected abstract void spawnLargeDoor(DungeonRoomInstance instance, LevelAccessor world, BlueprintLocation doorLocation);
 	
-	protected abstract void spawnSmallKey(DungeonRoomInstance instance, IWorld world, BlueprintLocation keyLocation);
+	protected abstract void spawnSmallKey(DungeonRoomInstance instance, LevelAccessor world, BlueprintLocation keyLocation);
 	
-	protected abstract void spawnSmallDoor(DungeonRoomInstance instance, IWorld world, BlueprintLocation smallDoor, @Nullable MutableBoundingBox bounds);
+	protected abstract void spawnSmallDoor(DungeonRoomInstance instance, LevelAccessor world, BlueprintLocation smallDoor, @Nullable BoundingBox bounds);
 	
 	public static interface IWorldHeightReader {
-		public int getHeight(Heightmap.Type type, int x, int z);
+		public int getHeight(Heightmap.Types type, int x, int z);
 	}
 	
 	protected static class DungeonGenerationContext {
 		public final Dungeon dungeon;
-		public final List<MutableBoundingBox> boundingBoxes;
+		public final List<BoundingBox> boundingBoxes;
 		public final Random rand;
 		public final DungeonInstance instance;
 		public final List<IDungeonRoomRef<?>> endRooms;
@@ -451,14 +451,14 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 	
 	// Checks if the provided room overlaps any existing bounds if it were to be spawned or would be out of world bounds
 	protected static boolean CheckRoomBounds(IDungeonRoom room, BlueprintLocation entry, DungeonGenerationContext context) {
-		MutableBoundingBox bounds = room.getBounds(entry);
+		BoundingBox bounds = room.getBounds(entry);
 		
-		if (bounds.y0 < 0 || bounds.y1 < 0 || bounds.y0 >= 255 || bounds.y1 >= 255) {
+		if (bounds.minY() < 0 || bounds.maxY() < 0 || bounds.minY() >= 255 || bounds.maxY() >= 255) {
 			return false;
 		}
 		
 		// Check existing room boxes
-		for (MutableBoundingBox box : context.boundingBoxes) {
+		for (BoundingBox box : context.boundingBoxes) {
 			if (bounds.intersects(box)) {
 				return false;
 			}
@@ -651,7 +651,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 			Validate.notNull(this.myRoom);
 			// Add bounding box to context
 			{
-				final MutableBoundingBox innerBounds = myRoom.getBounds();
+				final BoundingBox innerBounds = myRoom.getBounds();
 				// Shrink to not include walls, if walls are allowed to be shared
 //				innerBounds.offset(1, 1, 1);
 //				innerBounds.maxX -= 2;

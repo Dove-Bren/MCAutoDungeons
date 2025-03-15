@@ -2,22 +2,22 @@ package com.smanzana.autodungeons.world.blueprints;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.IWorld;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.LevelAccessor;
 
 public interface IBlueprint {
 
-	public default void spawn(IWorld world, BlockPos at) {
+	public default void spawn(LevelAccessor world, BlockPos at) {
 		this.spawn(world, at, Direction.NORTH);
 	}
 	
-	public default void spawn(IWorld world, BlockPos at, Direction direction) {
-		this.spawn(world, at, direction, (MutableBoundingBox) null, null);
+	public default void spawn(LevelAccessor world, BlockPos at, Direction direction) {
+		this.spawn(world, at, direction, (BoundingBox) null, null);
 	}
 	
-	public void spawn(IWorld world, BlockPos at, Direction direction, @Nullable MutableBoundingBox bounds, @Nullable IBlueprintBlockPlacer spawner);
+	public void spawn(LevelAccessor world, BlockPos at, Direction direction, @Nullable BoundingBox bounds, @Nullable IBlueprintBlockPlacer spawner);
 	
 	public BlueprintLocation getEntry();
 

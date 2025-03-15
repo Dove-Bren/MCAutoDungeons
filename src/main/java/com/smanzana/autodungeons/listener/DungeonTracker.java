@@ -12,10 +12,10 @@ import com.smanzana.autodungeons.network.message.DungeonTrackerUpdateMessage;
 import com.smanzana.autodungeons.world.dungeon.DungeonRecord;
 import com.smanzana.autodungeons.world.gen.DungeonStructure;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
@@ -23,7 +23,7 @@ import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.LogicalSidedProvider;
+import net.minecraftforge.fmllegacy.LogicalSidedProvider;
 
 /**
  * Track which dungeon a player is in. Synchronized between server and client.
@@ -32,36 +32,36 @@ import net.minecraftforge.fml.LogicalSidedProvider;
  */
 public class DungeonTracker {
 	
-	private final Map<PlayerEntity, DungeonRecord> dungeonMap;
+	private final Map<Player, DungeonRecord> dungeonMap;
 	
 	public DungeonTracker() {
 		this.dungeonMap = new HashMap<>();
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
-	public DungeonRecord getDungeon(PlayerEntity player) {
+	public DungeonRecord getDungeon(Player player) {
 		return dungeonMap.get(player);
 	}
 	
-	protected void setDungeon(PlayerEntity player, @Nullable DungeonRecord record) {
+	protected void setDungeon(Player player, @Nullable DungeonRecord record) {
 		DungeonRecord prev = this.dungeonMap.put(player, record);
 		if ((prev == null || !Objects.equals(prev, record)) && !player.getCommandSenderWorld().isClientSide()) {
-			notifyPlayer((ServerPlayerEntity) player);
+			notifyPlayer((ServerPlayer) player);
 		}
 	}
 	
-	protected void notifyPlayer(ServerPlayerEntity player) {
+	protected void notifyPlayer(ServerPlayer player) {
 		@Nullable DungeonRecord record = this.getDungeon(player);
 		NetworkHandler.sendTo(new DungeonTrackerUpdateMessage(player.getUUID(), record), player);
 	}
 	
-	public void overrideClientDungeon(PlayerEntity player, @Nullable DungeonRecord record) {
+	public void overrideClientDungeon(Player player, @Nullable DungeonRecord record) {
 		if (!AutoDungeons.GetProxy().hasIntegratedServer()) {
 			this.setDungeon(player, record);
 		}
 	}
 	
-	protected void updatePlayer(ServerPlayerEntity player) {
+	protected void updatePlayer(ServerPlayer player) {
 		final @Nullable DungeonRecord current;
 		if (!player.isAlive()) {
 			current = null;
@@ -74,12 +74,12 @@ public class DungeonTracker {
 	@SubscribeEvent
 	public void serverTick(ServerTickEvent event) {
 		if (event.phase == TickEvent.Phase.END) {
-			for (ServerWorld world : LogicalSidedProvider.INSTANCE.<MinecraftServer>get(LogicalSide.SERVER).getAllLevels()) {
+			for (ServerLevel world : LogicalSidedProvider.INSTANCE.<MinecraftServer>get(LogicalSide.SERVER).getAllLevels()) {
 				if (world.players().isEmpty()) {
 					continue;
 				}
 				
-				for (ServerPlayerEntity player : world.players()) {
+				for (ServerPlayer player : world.players()) {
 					updatePlayer(player);
 				}
 			}
@@ -95,7 +95,7 @@ public class DungeonTracker {
 		@SubscribeEvent
 		public void clientTick(ClientTickEvent event) {
 			if (event.phase == TickEvent.Phase.END) {
-				PlayerEntity player = AutoDungeons.GetProxy().getPlayer();
+				Player player = AutoDungeons.GetProxy().getPlayer();
 				if (player != null) {
 					DungeonRecord record = getDungeon(player);
 					if (record != null) {
@@ -107,7 +107,7 @@ public class DungeonTracker {
 		
 		@SubscribeEvent
 		public void onFogDensityCheck(EntityViewRenderEvent.FogDensity event) {
-			PlayerEntity player = AutoDungeons.GetProxy().getPlayer();
+			Player player = AutoDungeons.GetProxy().getPlayer();
 			if (player != null) {
 				DungeonRecord record = getDungeon(player);
 				if (record != null) {
@@ -118,7 +118,7 @@ public class DungeonTracker {
 		
 		@SubscribeEvent
 		public void onFogColorCheck(EntityViewRenderEvent.FogColors event) {
-			PlayerEntity player = AutoDungeons.GetProxy().getPlayer();
+			Player player = AutoDungeons.GetProxy().getPlayer();
 			if (player != null) {
 				DungeonRecord record = getDungeon(player);
 				if (record != null) {

@@ -1,9 +1,9 @@
 package com.smanzana.autodungeons.world.blueprints;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
 
 public class BlueprintLocation {
 	private final Direction facing;
@@ -31,17 +31,17 @@ public class BlueprintLocation {
 	private static final String NBT_DIR = "facing";
 	
 	
-	public CompoundNBT toNBT() {
-		CompoundNBT tag = new CompoundNBT();
-		tag.put(NBT_POS, NBTUtil.writeBlockPos(pos));
+	public CompoundTag toNBT() {
+		CompoundTag tag = new CompoundTag();
+		tag.put(NBT_POS, NbtUtils.writeBlockPos(pos));
 		tag.putByte(NBT_DIR, (byte) facing.get2DDataValue());
 		return tag;
 	}
 	
-	public static BlueprintLocation fromNBT(CompoundNBT nbt) {
+	public static BlueprintLocation fromNBT(CompoundTag nbt) {
 		final BlockPos pos;
 		
-		pos = NBTUtil.readBlockPos(nbt.getCompound(NBT_POS));
+		pos = NbtUtils.readBlockPos(nbt.getCompound(NBT_POS));
 		
 		Direction facing = Direction.from2DDataValue(nbt.getByte(NBT_DIR));
 		return new BlueprintLocation(pos, facing);

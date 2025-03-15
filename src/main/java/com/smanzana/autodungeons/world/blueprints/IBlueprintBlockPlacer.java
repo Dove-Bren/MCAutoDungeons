@@ -2,10 +2,10 @@ package com.smanzana.autodungeons.world.blueprints;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
 
 public interface IBlueprintBlockPlacer {
 	
@@ -28,5 +28,5 @@ public interface IBlueprintBlockPlacer {
 	 * @param direction
 	 * @param block
 	 */
-	public void finalizeBlock(BlueprintSpawnContext context, BlockPos pos, BlockState placedState, @Nullable TileEntity te, Direction direction, BlueprintBlock block);
+	public void finalizeBlock(BlueprintSpawnContext context, BlockPos pos, BlockState placedState, @Nullable BlockEntity te, Direction direction, BlueprintBlock block);
 }

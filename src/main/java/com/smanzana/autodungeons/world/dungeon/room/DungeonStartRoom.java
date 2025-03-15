@@ -13,8 +13,8 @@ import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoomRef.DungeonLobby
 import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoomRef.DungeonRoomRef;
 import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoomRef.DungeonStaircaseRoomRef;
 
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.IWorld;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.LevelAccessor;
 
 public class DungeonStartRoom {
 	
@@ -37,7 +37,7 @@ public class DungeonStartRoom {
 				);
 	}
 
-	public boolean canSpawnAt(IWorld world, BlueprintLocation start) {
+	public boolean canSpawnAt(LevelAccessor world, BlueprintLocation start) {
 		return lobby.canSpawnAt(world, start);
 	}
 
@@ -45,7 +45,7 @@ public class DungeonStartRoom {
 		return lobby.getExits(start);
 	}
 
-	public MutableBoundingBox getBounds(BlueprintLocation entry) {
+	public BoundingBox getBounds(BlueprintLocation entry) {
 		return lobby.getBounds(entry);
 	}
 

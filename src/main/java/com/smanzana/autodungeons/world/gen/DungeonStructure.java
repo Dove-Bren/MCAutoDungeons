@@ -9,36 +9,35 @@ import javax.annotation.Nullable;
 import com.smanzana.autodungeons.util.DimensionUtils;
 import com.smanzana.autodungeons.util.WorldUtil;
 import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
-import com.smanzana.autodungeons.world.dungeon.DungeonRecord;
-import com.smanzana.autodungeons.world.dungeon.DungeonRoomInstance;
 import com.smanzana.autodungeons.world.dungeon.Dungeon;
 import com.smanzana.autodungeons.world.dungeon.DungeonInstance;
+import com.smanzana.autodungeons.world.dungeon.DungeonRecord;
+import com.smanzana.autodungeons.world.dungeon.DungeonRoomInstance;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.Direction;
-import net.minecraft.util.SharedSeedRandom;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.util.registry.DynamicRegistries;
-import net.minecraft.world.ISeedReader;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.provider.BiomeProvider;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.gen.GenerationStage;
-import net.minecraft.world.gen.feature.NoFeatureConfig;
-import net.minecraft.world.gen.feature.structure.IStructurePieceType;
-import net.minecraft.world.gen.feature.structure.Structure;
-import net.minecraft.world.gen.feature.structure.StructureManager;
-import net.minecraft.world.gen.feature.structure.StructurePiece;
-import net.minecraft.world.gen.feature.structure.StructureStart;
-import net.minecraft.world.gen.feature.template.TemplateManager;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.StructureFeatureManager;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.GenerationStep;
+import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.levelgen.feature.StructurePieceType;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.StructurePiece;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import net.minecraft.world.gen.feature.structure.Structure.IStartFactory;
-
-public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
+public abstract class DungeonStructure extends StructureFeature<NoneFeatureConfiguration> {
 	
 //	public static final class NostrumDungeonConfig implements IFeatureConfig {
 //		
@@ -72,20 +71,20 @@ public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 	protected final Dungeon dungeon;
 	
 	public DungeonStructure(Dungeon dungeon) {
-		super(NoFeatureConfig.CODEC);
+		super(NoneFeatureConfiguration.CODEC);
 		this.dungeon = dungeon;
 	}
 	
 	@Override
-	protected boolean /*hasStartAt*/ isFeatureChunk(ChunkGenerator generator, BiomeProvider biomeProvider, long seed, SharedSeedRandom rand, int x, int z, Biome biome, ChunkPos pos, NoFeatureConfig config) {
-		return super.isFeatureChunk(generator, biomeProvider, seed, rand, x, z, biome, pos, config);
+	protected boolean /*hasStartAt*/ isFeatureChunk(ChunkGenerator generator, BiomeSource biomeProvider, long seed, WorldgenRandom rand, ChunkPos pos, Biome biome, ChunkPos posCopy, NoneFeatureConfiguration config, LevelHeightAccessor height) {
+		return super.isFeatureChunk(generator, biomeProvider, seed, rand, pos, biome, pos, config, height);
 	}
 
 	@Override
-	public IStartFactory<NoFeatureConfig> getStartFactory() {
-		return (Structure<NoFeatureConfig> parent, int i1, int i2, MutableBoundingBox bounds, int i3, long l1)
+	public StructureStartFactory<NoneFeatureConfiguration> getStartFactory() {
+		return (StructureFeature<NoneFeatureConfiguration> parent, ChunkPos pos, int i3, long l1)
 				-> {
-					return new Start(this.getDungeon(), parent, i1, i2, bounds, i3, l1);
+					return new Start(this.getDungeon(), parent, pos, i3, l1);
 				};
 	}
 	
@@ -103,18 +102,18 @@ public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 	 * This surface structure stage places the structure before plants and ores are generated.
 	 */
 	@Override
-	public GenerationStage.Decoration step() {
-		return GenerationStage.Decoration.SURFACE_STRUCTURES;
+	public GenerationStep.Decoration step() {
+		return GenerationStep.Decoration.SURFACE_STRUCTURES;
 	}
 	
-	protected static final SharedSeedRandom MakeRandom(int x, int z, long seed) {
+	protected static final WorldgenRandom MakeRandom(ChunkPos pos, long seed) {
 		// Copied from vanilla structure starts which all do this to make their random
-		SharedSeedRandom random = new SharedSeedRandom();
-		random.setLargeFeatureSeed(seed, x, z);
+		WorldgenRandom random = new WorldgenRandom();
+		random.setLargeFeatureSeed(seed, pos.x, pos.z);
 		return random;
 	}
 	
-	public static final @Nullable DungeonRecord GetDungeonAt(ServerWorld world, BlockPos at, DungeonStructure structure) {
+	public static final @Nullable DungeonRecord GetDungeonAt(ServerLevel world, BlockPos at, DungeonStructure structure) {
 		// Would like to consider using GetContainingStructure() and use the start, but the start can't carry instance info through a write/read.
 		StructurePiece piece = WorldUtil.GetContainingStructurePiece(world, at, structure, true);
 		if (piece != null && piece instanceof DungeonPiece) {
@@ -127,7 +126,7 @@ public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 	// structures aren't set up by the first time this is set up.
 	//private static final NostrumDungeonStructure[] TYPES = {NostrumStructures.DUNGEON_PORTAL, NostrumStructures.DUNGEON_DRAGON, NostrumStructures.DUNGEON_PLANTBOSS};
 	
-	public static final @Nullable DungeonRecord GetDungeonAt(ServerWorld world, BlockPos at) {
+	public static final @Nullable DungeonRecord GetDungeonAt(ServerLevel world, BlockPos at) {
 		List<DungeonStructure> dungeonStructures = ForgeRegistries.STRUCTURE_FEATURES.getValues().stream().filter(s -> s instanceof DungeonStructure).map(s -> (DungeonStructure) s).collect(Collectors.toList());
 		for (DungeonStructure structure : dungeonStructures) {
 			@Nullable DungeonRecord record = GetDungeonAt(world, at, structure);
@@ -139,35 +138,36 @@ public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 	}
 	
 	// What is basically an 'instance' of the struct in MC gen. Doesn't have to do much besides generate logical dungeon and populate children list.
-	public static class Start extends StructureStart<NoFeatureConfig> {
+	public static class Start extends StructureStart<NoneFeatureConfiguration> {
 		
 		private final Dungeon dungeon;
 		private final DungeonInstance instance;
 		
 		//private static final String NBT_INSTNACE = "dungeonInstance";
 		
-		public Start(Dungeon dungeon, Structure<NoFeatureConfig> parent, int i1, int i2, MutableBoundingBox bounds, int i3, long l1) {
-			super(parent, i1, i2, bounds, i3, l1);
+		public Start(Dungeon dungeon, StructureFeature<NoneFeatureConfiguration> parent, ChunkPos pos, int i3, long l1) {
+			super(parent, pos, i3, l1);
 			this.dungeon = dungeon;
-			this.instance = DungeonInstance.Random(dungeon, MakeRandom(i1, i2, l1));
+			this.instance = DungeonInstance.Random(dungeon, MakeRandom(pos, l1));
 		}
 
 		@Override
-		public void /*init*/ generatePieces(DynamicRegistries registries, ChunkGenerator generator, TemplateManager templateManagerIn, int chunkX, int chunkZ, Biome biomeIn, NoFeatureConfig config) {
+		public void /*init*/ generatePieces(RegistryAccess registries, ChunkGenerator generator, StructureManager templateManagerIn, ChunkPos pos, Biome biomeIn, NoneFeatureConfiguration config, LevelHeightAccessor height) {
 			// Pick random Y between 30 and 60 to start
 			final int y = this.random.nextInt(30) + 30;
 			// Center in chunk to try and avoid some 'CanSpawnHere' chunk spillage
-			final int x = (chunkX * 16) + 8;
-			final int z = (chunkZ * 16) + 8;
+			final int x = (pos.x * 16) + 8;
+			final int z = (pos.z * 16) + 8;
 			
 			final BlueprintLocation start = new BlueprintLocation(new BlockPos(x, y, z), Direction.Plane.HORIZONTAL.getRandomDirection(this.random));
-			List<DungeonRoomInstance> instances = this.dungeon.generate((type, cx, cz) -> generator.getBaseHeight(cx, cz, type), start, this.instance);
+			List<DungeonRoomInstance> instances = this.dungeon.generate((type, cx, cz) -> generator.getBaseHeight(cx, cz, type, height), start, this.instance);
 			
 			for (DungeonRoomInstance instance : instances) {
-				pieces.add(new DungeonPiece(instance));
+				//pieces.add(new DungeonPiece(instance));
+				this.addPiece(new DungeonPiece(instance));
 			}
 			
-			this.calculateBoundingBox();
+			//this.calculateBoundingBox();
 		}
 		
 		// In 1.16, I can override this but can't override a READ anywhere that is effective.
@@ -186,20 +186,18 @@ public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 		protected final DungeonRoomInstance instance;
 		
 		public DungeonPiece(DungeonRoomInstance instance) {
-			super(DungeonPieceSerializer.instance, 0);
+			super(DungeonPieceSerializer.instance, 0, instance.getBounds());
 			this.instance = instance;
-			
-			this.boundingBox = instance.getBounds();
 		}
 		
 		@Override
-		protected void addAdditionalSaveData(CompoundNBT tagCompound) { // Note: Actually "WRITE" !!!
+		protected void addAdditionalSaveData(ServerLevel world, CompoundTag tagCompound) { // Note: Actually "WRITE" !!!
 			DungeonPieceSerializer.write(this, tagCompound);
 		}
 
 		@Override
-		public boolean /*addComponentParts*/ postProcess(ISeedReader worldIn, StructureManager manager, ChunkGenerator chunkGen,
-				Random randomIn, MutableBoundingBox structureBoundingBoxIn,
+		public boolean /*addComponentParts*/ postProcess(WorldGenLevel worldIn, StructureFeatureManager manager, ChunkGenerator chunkGen,
+				Random randomIn, BoundingBox structureBoundingBoxIn,
 				ChunkPos chunkPosIn, BlockPos something) {
 			
 			// Stop gap: is this the overworld?
@@ -213,7 +211,7 @@ public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 		
 	}
 	
-	public static class DungeonPieceSerializer implements IStructurePieceType {
+	public static class DungeonPieceSerializer implements StructurePieceType {
 		
 		public static final String PIECE_ID = "autodungeon:dungeonpiecedynamic";
 		public static final DungeonPieceSerializer instance = new DungeonPieceSerializer();
@@ -221,13 +219,13 @@ public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 		private static final String NBT_DATA = "autodungeondata";
 
 		@Override
-		public DungeonPiece load(TemplateManager templateManager, CompoundNBT tag) {
-			final CompoundNBT subTag = tag.getCompound(NBT_DATA);
+		public DungeonPiece load(ServerLevel level, CompoundTag tag) {
+			final CompoundTag subTag = tag.getCompound(NBT_DATA);
 			DungeonRoomInstance instance = DungeonRoomInstance.fromNBT(subTag);
 			return new DungeonPiece(instance);
 		}
 		
-		public static void write(DungeonPiece piece, CompoundNBT tagCompound) {
+		public static void write(DungeonPiece piece, CompoundTag tagCompound) {
 			tagCompound.put(NBT_DATA, piece.instance.toNBT(null));
 		}
 		

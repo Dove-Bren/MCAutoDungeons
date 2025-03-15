@@ -4,9 +4,9 @@ import javax.annotation.Nullable;
 
 import com.smanzana.autodungeons.AutoDungeons;
 
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Registry;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -19,7 +19,7 @@ import net.minecraftforge.registries.RegistryBuilder;
 @Mod.EventBusSubscriber(modid = AutoDungeons.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class DungeonRegistry {
 
-	public static final RegistryKey<Registry<Dungeon>> KEY_REG_DUNGEON_TYPES = RegistryKey.createRegistryKey(new ResourceLocation(AutoDungeons.MODID, "dungeon_type"));
+	public static final ResourceKey<Registry<Dungeon>> KEY_REG_DUNGEON_TYPES = ResourceKey.createRegistryKey(new ResourceLocation(AutoDungeons.MODID, "dungeon_type"));
 	
 	private static IForgeRegistry<Dungeon> REGISTRY;
 	

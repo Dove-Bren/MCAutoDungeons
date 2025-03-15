@@ -14,18 +14,18 @@ import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
 import com.smanzana.autodungeons.world.dungeon.room.BlueprintDungeonRoom;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomLoader;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ComparatorBlock;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.ComparatorBlock;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.common.MinecraftForge;
 
 public class CommandWriteRoom {
 	
-	public static final void register(CommandDispatcher<CommandSource> dispatcher) {
+	public static final void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(
 				Commands.literal("writeroom")
 					.requires(s -> s.hasPermission(2))
@@ -41,19 +41,19 @@ public class CommandWriteRoom {
 				);
 	}
 	
-	private static final int execute(CommandContext<CommandSource> context, final String name) throws CommandSyntaxException {
+	private static final int execute(CommandContext<CommandSourceStack> context, final String name) throws CommandSyntaxException {
 		return execute(context, name, 1);
 	}
 	
-	private static final int execute(CommandContext<CommandSource> context, final String name, final int weight) throws CommandSyntaxException {
+	private static final int execute(CommandContext<CommandSourceStack> context, final String name, final int weight) throws CommandSyntaxException {
 		return execute(context, name, weight, 1);
 	}
 	
-	private static final int execute(CommandContext<CommandSource> context, final String name, final int weight, final int cost) throws CommandSyntaxException {
-		ServerPlayerEntity player = context.getSource().getPlayerOrException();
+	private static final int execute(CommandContext<CommandSourceStack> context, final String name, final int weight, final int cost) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
 		
 		if (!player.isCreative()) {
-			context.getSource().sendSuccess(new StringTextComponent("This command must be run as a creative player"), true);
+			context.getSource().sendSuccess(new TextComponent("This command must be run as a creative player"), true);
 			return 1;
 		}
 		
@@ -62,7 +62,7 @@ public class CommandWriteRoom {
 		MinecraftForge.EVENT_BUS.post(event);
 		
 		if (!event.hasRegion()) {
-			context.getSource().sendSuccess(new StringTextComponent("No selected region was obtained by any providing mods"), true);
+			context.getSource().sendSuccess(new TextComponent("No selected region was obtained by any providing mods"), true);
 			return 1;
 		}
 		
@@ -92,9 +92,9 @@ public class CommandWriteRoom {
 				foundEntry[0]);
 		
 		if (DungeonRoomLoader.instance().writeRoomAsFile(blueprint, name, weight, cost, new LinkedList<>())) {
-			context.getSource().sendSuccess(new StringTextComponent("Room written!"), true);
+			context.getSource().sendSuccess(new TextComponent("Room written!"), true);
 		} else {
-			context.getSource().sendSuccess(new StringTextComponent("An error was encountered while writing the room"), true);
+			context.getSource().sendSuccess(new TextComponent("An error was encountered while writing the room"), true);
 		}
 		
 		return 0;

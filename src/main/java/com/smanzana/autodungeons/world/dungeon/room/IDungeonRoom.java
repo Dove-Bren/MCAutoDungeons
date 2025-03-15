@@ -7,9 +7,9 @@ import javax.annotation.Nullable;
 
 import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.IWorld;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.LevelAccessor;
 
 public interface IDungeonRoom {
 	
@@ -20,7 +20,7 @@ public interface IDungeonRoom {
 	 * @param world
 	 * @return
 	 */
-	public boolean canSpawnAt(IWorld world, BlueprintLocation start); // TODO ! Some of these checks might spill into other chunks!
+	public boolean canSpawnAt(LevelAccessor world, BlueprintLocation start); // TODO ! Some of these checks might spill into other chunks!
 	
 	/**
 	 * Return the number of exits this room has
@@ -41,7 +41,7 @@ public interface IDungeonRoom {
 	 * @param entry
 	 * @return
 	 */
-	public MutableBoundingBox getBounds(BlueprintLocation entry);
+	public BoundingBox getBounds(BlueprintLocation entry);
 	
 	/**
 	 * Returns the difficulty of the given room, which is used when figuring outa
@@ -76,10 +76,10 @@ public interface IDungeonRoom {
 	
 	public boolean hasTraps();
 	
-	public void spawn(IWorld world, BlueprintLocation start, @Nullable MutableBoundingBox bounds, UUID dungeonID);
+	public void spawn(LevelAccessor world, BlueprintLocation start, @Nullable BoundingBox bounds, UUID dungeonID);
 	
-	default public void spawn(IWorld world, BlueprintLocation start) {
-		spawn(world, start, (MutableBoundingBox) null, UUID.randomUUID());
+	default public void spawn(LevelAccessor world, BlueprintLocation start) {
+		spawn(world, start, (BoundingBox) null, UUID.randomUUID());
 	}
 	
 	public ResourceLocation getRoomID();

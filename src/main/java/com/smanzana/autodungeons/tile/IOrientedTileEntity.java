@@ -1,6 +1,6 @@
 package com.smanzana.autodungeons.tile;
 
-import net.minecraft.util.Direction;
+import net.minecraft.core.Direction;
 
 /**
  * Marks a tile entity that stores information that depends on rotation (like block offsets) that

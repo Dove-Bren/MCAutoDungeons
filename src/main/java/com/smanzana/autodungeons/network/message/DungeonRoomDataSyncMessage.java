@@ -10,12 +10,12 @@ import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomLoader;
 
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.common.util.Constants.NBT;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 
 /**
  * Server is synchronizing data pack info (dungeon rooms) with client
@@ -32,9 +32,9 @@ public class DungeonRoomDataSyncMessage {
 		});
 	}
 		
-	private final List<CompoundNBT> roomData;
+	private final List<CompoundTag> roomData;
 	
-	public DungeonRoomDataSyncMessage(List<CompoundNBT> roomData) {
+	public DungeonRoomDataSyncMessage(List<CompoundTag> roomData) {
 		this.roomData = roomData;
 	}
 	
@@ -42,22 +42,22 @@ public class DungeonRoomDataSyncMessage {
 		this(loader.getServerData());
 	}
 
-	public static DungeonRoomDataSyncMessage decode(PacketBuffer buf) {
+	public static DungeonRoomDataSyncMessage decode(FriendlyByteBuf buf) {
 		final int dataCount = buf.readVarInt();
-		final List<CompoundNBT> roomData = new ArrayList<>(dataCount);
+		final List<CompoundTag> roomData = new ArrayList<>(dataCount);
 		
-		CompoundNBT bigData = null;
+		CompoundTag bigData = null;
 		try {
-			bigData = CompressedStreamTools.readCompressed(new ByteBufInputStream(buf));
+			bigData = NbtIo.readCompressed(new ByteBufInputStream(buf));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		ListNBT list = bigData.getList("1", NBT.TAG_COMPOUND);
+		ListTag list = bigData.getList("1", Tag.TAG_COMPOUND);
 		
 		for (int i = 0; i < list.size(); i++) {
-			final CompoundNBT tag;
+			final CompoundTag tag;
 			//tag = buf.readCompoundTag();
 			tag = list.getCompound(i);
 			
@@ -67,11 +67,11 @@ public class DungeonRoomDataSyncMessage {
 		return new DungeonRoomDataSyncMessage(roomData);
 	}
 
-	public static void encode(DungeonRoomDataSyncMessage msg, PacketBuffer buf) {
+	public static void encode(DungeonRoomDataSyncMessage msg, FriendlyByteBuf buf) {
 		buf.writeVarInt(msg.roomData.size());
-		CompoundNBT bigData = new CompoundNBT();
-		ListNBT list = new ListNBT();
-		for (CompoundNBT data : msg.roomData) {
+		CompoundTag bigData = new CompoundTag();
+		ListTag list = new ListTag();
+		for (CompoundTag data : msg.roomData) {
 			// Want to just do this, but this doesn't actually compress the NBT data so it ends up being MASSIVE (24MB)
 			//buf.writeCompoundTag(data);
 			list.add(data);
@@ -79,7 +79,7 @@ public class DungeonRoomDataSyncMessage {
 		bigData.put("1", list);
 		
 		try {
-			CompressedStreamTools.writeCompressed(bigData, new ByteBufOutputStream(buf));
+			NbtIo.writeCompressed(bigData, new ByteBufOutputStream(buf));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

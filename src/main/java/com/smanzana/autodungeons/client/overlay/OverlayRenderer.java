@@ -2,31 +2,28 @@ package com.smanzana.autodungeons.client.overlay;
 
 import javax.annotation.Nullable;
 
-import org.lwjgl.opengl.GL11;
-
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Matrix4f;
 import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.util.ColorUtil;
 import com.smanzana.autodungeons.world.dungeon.DungeonRecord;
 
-import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.client.gui.ForgeIngameGui;
+import net.minecraftforge.client.gui.IIngameOverlay;
 
-public class OverlayRenderer extends AbstractGui {
+public class OverlayRenderer implements IIngameOverlay {
 	
 	public static final ResourceLocation ICON_COPPER_KEY = new ResourceLocation(AutoDungeons.MODID, "textures/models/copper_key.png");
 	public static final ResourceLocation ICON_SILVER_KEY = new ResourceLocation(AutoDungeons.MODID, "textures/models/silver_key.png");
@@ -34,28 +31,20 @@ public class OverlayRenderer extends AbstractGui {
 	private int keyIndex; // Controls dungoen key overlay fade in and out
 	private @Nullable DungeonRecord lastDungeon;
 	private static final int keyFadeDur = 60;
+	
+	//protected final IIngameOverlay dungeonKeyOverlay;
 
 	public OverlayRenderer() {
-		MinecraftForge.EVENT_BUS.register(this);
 		
-		//healthbarOverlay = OverlayRegistry.registerOverlayAbove(ForgeIngameGui.EXPERIENCE_BAR_ELEMENT, "PetCommand::healthbarOverlay", this::renderHealthbarOverlay);
-		//modeIconOverlay = OverlayRegistry.registerOverlayAbove(ForgeIngameGui.CROSSHAIR_ELEMENT, "PetCommand::modeOverlay", this::renderModeOverlay);
 	}
 	
-	@SubscribeEvent
-	public void onRender(RenderGameOverlayEvent.Post event) {
+	public void render(ForgeIngameGui gui, PoseStack matrixStackIn, float partialTicks, int windowWidth, int windowHeight) {
+		//PoseStack matrixStackIn, LocalPlayer player, Window window, @Nullable DungeonRecord dungeon, Font fonter
+		
 		Minecraft mc = Minecraft.getInstance();
-		ClientPlayerEntity player = mc.player;
-		MainWindow window = event.getWindow();
-		MatrixStack matrixStackIn = event.getMatrixStack();
-		
-		if (event.getType() == ElementType.EXPERIENCE) {
-
-			renderDungeonKeys(matrixStackIn, player, window, AutoDungeons.GetDungeonTracker().getDungeon(player), mc.font);
-		}
-	}
-	
-	private void renderDungeonKeys(MatrixStack matrixStackIn, ClientPlayerEntity player, MainWindow window, @Nullable DungeonRecord dungeon, FontRenderer fonter) {
+		LocalPlayer player = mc.player;
+		@Nullable DungeonRecord dungeon = AutoDungeons.GetDungeonTracker().getDungeon(player);
+		final Font fonter = mc.font;
 		
 		if (dungeon != null) {
 			lastDungeon = dungeon;
@@ -75,15 +64,14 @@ public class OverlayRenderer extends AbstractGui {
 				final float slideProg = (float) keyIndex / (float) keyFadeDur;
 				if (smallCount > 0 || largeCount > 0) {
 					final int width = 45;
-					final int xOffset = window.getGuiScaledWidth() - width;
+					final int xOffset = windowWidth - width;
 					final int height = 14;
-					final int yOffset = window.getGuiScaledHeight() - height;
+					final int yOffset = windowHeight - height;
 					final int colorTop = 0x20000000;
 					final int colorBottom = 0xFF000000;
 					final int iconWidth = 12;
 					final int iconHeight = 12;
 					final int textYOffset = (iconHeight - fonter.lineHeight) / 2;
-					Minecraft mc = Minecraft.getInstance();
 					
 					matrixStackIn.pushPose();
 					
@@ -98,16 +86,16 @@ public class OverlayRenderer extends AbstractGui {
 					matrixStackIn.translate(width - 2, 2, 0);
 					matrixStackIn.scale(.8f, .8f, 1f);
 					
-					mc.getTextureManager().bind(ICON_COPPER_KEY);
-					blit(matrixStackIn, -iconWidth, 0, 0, 0, iconWidth, iconWidth, iconWidth, iconWidth);
+					RenderSystem.setShaderTexture(0, ICON_COPPER_KEY);
+					GuiComponent.blit(matrixStackIn, -iconWidth, 0, 0, 0, iconWidth, iconWidth, iconWidth, iconWidth);
 					matrixStackIn.translate(-(iconWidth + 6), 0, 0);
 					
 					fonter.draw(matrixStackIn, "" + smallCount, 0, textYOffset + 1, 0xFFFFFFFF);
 					matrixStackIn.translate(-(5 + 2), 0, 0);
 					
 					if (largeCount > 0) {
-						mc.getTextureManager().bind(ICON_SILVER_KEY);
-						blit(matrixStackIn, -iconWidth, 0, 0, 0, iconWidth, iconWidth, iconWidth, iconWidth);
+						RenderSystem.setShaderTexture(0, ICON_SILVER_KEY);
+						GuiComponent.blit(matrixStackIn, -iconWidth, 0, 0, 0, iconWidth, iconWidth, iconWidth, iconWidth);
 						matrixStackIn.translate(-(iconWidth + 6), 0, 0);
 						
 						fonter.draw(matrixStackIn, "" + largeCount, 0, textYOffset + 1, 0xFFFFFFFF);
@@ -120,22 +108,24 @@ public class OverlayRenderer extends AbstractGui {
 		}
 	}
 	
-	private static final void drawGradientRect(MatrixStack stack, int minX, int minY, int maxX, int maxY, int colorTopLeft, int colorTopRight, int colorBottomLeft, int colorBottomRight) {
+	private static final void drawGradientRect(PoseStack stack, int minX, int minY, int maxX, int maxY, int colorTopLeft, int colorTopRight, int colorBottomLeft, int colorBottomRight) {
 		final Matrix4f transform = stack.last().pose();
 		final float[] colorTR = ColorUtil.ARGBToColor(colorTopRight);
 		final float[] colorTL = ColorUtil.ARGBToColor(colorTopLeft);
 		final float[] colorBL = ColorUtil.ARGBToColor(colorBottomLeft);
 		final float[] colorBR = ColorUtil.ARGBToColor(colorBottomRight);
 		
-		Tessellator tessellator = Tessellator.getInstance();
+		Tesselator tessellator = Tesselator.getInstance();
+		
+		RenderSystem.setShader(GameRenderer::getPositionColorShader);
 		BufferBuilder bufferbuilder = tessellator.getBuilder();
-		bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
 		RenderSystem.disableTexture();
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
-		RenderSystem.disableAlphaTest();
-		RenderSystem.shadeModel(GL11.GL_SMOOTH);
+		//RenderSystem.disableAlphaTest();
+		//RenderSystem.shadeModel(GL11.GL_SMOOTH);
 		{
 			bufferbuilder.vertex(transform, minX, minY, 0).color(colorTL[0], colorTL[1], colorTL[2], colorTL[3]).endVertex();
 			bufferbuilder.vertex(transform, minX, maxY, 0).color(colorBL[0], colorBL[1], colorBL[2], colorBL[3]).endVertex();
@@ -144,10 +134,10 @@ public class OverlayRenderer extends AbstractGui {
 		}
 
 		bufferbuilder.end();
-		WorldVertexBufferUploader.end(bufferbuilder);
+		BufferUploader.end(bufferbuilder);
 		RenderSystem.disableBlend();
-		RenderSystem.enableAlphaTest();
+		//RenderSystem.enableAlphaTest();
 		RenderSystem.enableTexture();
-		RenderSystem.shadeModel(GL11.GL_FLAT);
+		//RenderSystem.shadeModel(GL11.GL_FLAT);
 	}
 }

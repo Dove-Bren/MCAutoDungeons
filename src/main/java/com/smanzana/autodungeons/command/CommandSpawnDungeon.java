@@ -14,17 +14,17 @@ import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
 import com.smanzana.autodungeons.world.dungeon.DungeonRegistry;
 import com.smanzana.autodungeons.world.dungeon.Dungeon;
 
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.Direction;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.Direction;
 
 public class CommandSpawnDungeon {
 
 	private static Random rand = null;
 	
-	public static final void register(CommandDispatcher<CommandSource> dispatcher) {
+	public static final void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(
 				Commands.literal("spawndungeon")
 					.requires(s -> s.hasPermission(2))
@@ -35,7 +35,7 @@ public class CommandSpawnDungeon {
 				);
 	}
 	
-	private static final int execute(CommandContext<CommandSource> context, final String typeName) throws CommandSyntaxException {
+	private static final int execute(CommandContext<CommandSourceStack> context, final String typeName) throws CommandSyntaxException {
 		
 		Dungeon dungeon = null;
 		for (Dungeon candidate : GetDungeons()) {
@@ -53,13 +53,13 @@ public class CommandSpawnDungeon {
 		}
 	}
 
-	private static final int execute(CommandContext<CommandSource> context, final Dungeon dungeon) throws CommandSyntaxException {
+	private static final int execute(CommandContext<CommandSourceStack> context, final Dungeon dungeon) throws CommandSyntaxException {
 		if (CommandSpawnDungeon.rand == null) {
 			CommandSpawnDungeon.rand = new Random();
 		}
 		
-		ServerPlayerEntity player = context.getSource().getPlayerOrException();
-		dungeon.spawn(player.level, new BlueprintLocation(player.blockPosition(), Direction.fromYRot(player.yRot)));
+		ServerPlayer player = context.getSource().getPlayerOrException();
+		dungeon.spawn(player.level, new BlueprintLocation(player.blockPosition(), Direction.fromYRot(player.getYRot())));
 		
 		return 0;
 	}
@@ -69,6 +69,6 @@ public class CommandSpawnDungeon {
 	}
 	
 	private static final <S> CompletableFuture<Suggestions> GetSuggestions(CommandContext<S> ctx, SuggestionsBuilder sb) {
-		return ISuggestionProvider.suggest(GetDungeons().stream().map(d -> d.getRegistryName().toString()), sb);
+		return SharedSuggestionProvider.suggest(GetDungeons().stream().map(d -> d.getRegistryName().toString()), sb);
 	}
 }

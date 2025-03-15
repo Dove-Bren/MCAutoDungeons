@@ -1,9 +1,9 @@
 package com.smanzana.autodungeons.world.dungeon.room;
 
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.core.Vec3i;
 
 public interface IDungeonLobbyRoom extends IDungeonRoom {
 
-	public Vector3i getStairOffset();
+	public Vec3i getStairOffset();
 	
 }

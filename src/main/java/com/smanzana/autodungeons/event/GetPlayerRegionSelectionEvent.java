@@ -1,7 +1,7 @@
 package com.smanzana.autodungeons.event;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.core.BlockPos;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
 /**
@@ -14,7 +14,7 @@ public class GetPlayerRegionSelectionEvent extends PlayerEvent {
 	protected BlockPos pos1;
 	protected BlockPos pos2;
 	
-	public GetPlayerRegionSelectionEvent(PlayerEntity player) {
+	public GetPlayerRegionSelectionEvent(Player player) {
 		super(player);
 	}
 

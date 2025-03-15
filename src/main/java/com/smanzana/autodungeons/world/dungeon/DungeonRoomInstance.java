@@ -12,16 +12,16 @@ import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.util.NetUtils;
 import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomRegistry;
-import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoom;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomRegistry.DungeonRoomRecord;
+import com.smanzana.autodungeons.world.dungeon.room.IDungeonRoom;
 
-import net.minecraft.block.ChestBlock;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.IWorld;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 public class DungeonRoomInstance {
 	private final BlueprintLocation entry;
@@ -57,7 +57,7 @@ public class DungeonRoomInstance {
 		this.hasSmallKey = true;
 	}
 
-	public MutableBoundingBox getBounds() {
+	public BoundingBox getBounds() {
 		if (this.template == null) {
 			System.out.println("null");
 		}
@@ -80,11 +80,11 @@ public class DungeonRoomInstance {
 		return this.template;
 	}
 	
-	public void spawn(IWorld world) {
+	public void spawn(LevelAccessor world) {
 		spawn(world, null);
 	}
 	
-	public void spawn(IWorld world, MutableBoundingBox bounds) {
+	public void spawn(LevelAccessor world, BoundingBox bounds) {
 		// Spawn room template
 		template.spawn(world, this.entry, bounds, this.roomID);
 		
@@ -148,9 +148,9 @@ public class DungeonRoomInstance {
 	private static final String NBT_HASSMALLKEY = "hasSmallKey";
 	private static final String NBT_SMALL_DOORS = "smallDoors";
 	
-	public @Nonnull CompoundNBT toNBT(@Nullable CompoundNBT tag) {
+	public @Nonnull CompoundTag toNBT(@Nullable CompoundTag tag) {
 		if (tag == null) {
-			tag = new CompoundNBT();
+			tag = new CompoundTag();
 		}
 		
 		tag.put(NBT_ENTRY, this.entry.toNBT());
@@ -165,7 +165,7 @@ public class DungeonRoomInstance {
 		return tag;
 	}
 	
-	public static DungeonRoomInstance fromNBT(CompoundNBT tag) {
+	public static DungeonRoomInstance fromNBT(CompoundTag tag) {
 		final BlueprintLocation entry = BlueprintLocation.fromNBT(tag.getCompound(NBT_ENTRY));
 		final ResourceLocation templateID = new ResourceLocation(tag.getString(NBT_TEMPLATE));
 		final DungeonRoomRecord record = DungeonRoomRegistry.GetInstance().getRegisteredRoom(templateID);
@@ -182,8 +182,8 @@ public class DungeonRoomInstance {
 		
 		ret.hasSmallKey = tag.getBoolean(NBT_HASSMALLKEY);
 		ret.smallDoors.clear();
-		if (tag.contains(NBT_SMALL_DOORS, NBT.TAG_LIST)) { // mostly just legacy support?
-			NetUtils.FromNBT(ret.smallDoors, (ListNBT) tag.get(NBT_SMALL_DOORS), nbt -> BlueprintLocation.fromNBT((CompoundNBT) nbt));
+		if (tag.contains(NBT_SMALL_DOORS, Tag.TAG_LIST)) { // mostly just legacy support?
+			NetUtils.FromNBT(ret.smallDoors, (ListTag) tag.get(NBT_SMALL_DOORS), nbt -> BlueprintLocation.fromNBT((CompoundTag) nbt));
 		}
 		
 		return ret;

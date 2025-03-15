@@ -22,16 +22,16 @@ import com.smanzana.autodungeons.world.blueprints.Blueprint.INBTGenerator;
 import com.smanzana.autodungeons.world.blueprints.Blueprint.LoadContext;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomRegistry.DungeonRoomRegisterEvent;
 
-import net.minecraft.client.resources.ReloadListener;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.Constants.NBT;
 
 public class DungeonRoomLoader {
 	
@@ -84,8 +84,8 @@ public class DungeonRoomLoader {
 	private static final String NBT_COST = "cost";
 	private static final String NBT_ID = "id";
 	
-	protected static final CompoundNBT toNBT(CompoundNBT blueprintTag, @Nullable ResourceLocation ID, String name, int weight, int cost, List<String> tags) {
-		CompoundNBT nbt = new CompoundNBT();
+	protected static final CompoundTag toNBT(CompoundTag blueprintTag, @Nullable ResourceLocation ID, String name, int weight, int cost, List<String> tags) {
+		CompoundTag nbt = new CompoundTag();
 		nbt.putString(NBT_NAME, name);
 		nbt.putInt(NBT_WEIGHT, weight);
 		nbt.putInt(NBT_COST, cost);
@@ -94,16 +94,16 @@ public class DungeonRoomLoader {
 			nbt.putString(NBT_ID, ID.toString());
 		}
 		
-		ListNBT list = new ListNBT();
+		ListTag list = new ListTag();
 		for (String tag : tags) {
-			list.add(StringNBT.valueOf(tag));
+			list.add(StringTag.valueOf(tag));
 		}
 		nbt.put(NBT_TAGS, list);
 		
 		return nbt;
 	}
 	
-	private final Blueprint loadBlueprintFromNBT(LoadContext context, CompoundNBT nbt) {
+	private final Blueprint loadBlueprintFromNBT(LoadContext context, CompoundTag nbt) {
 		// Get and stash name for loading debug
 		String name = nbt.getString(NBT_NAME);
 		context.name = name;
@@ -112,7 +112,7 @@ public class DungeonRoomLoader {
 		return blueprint;
 	}
 	
-	public final DungeonRoomEntry loadEntryFromNBT(LoadContext context, @Nullable ResourceLocation idOverride, CompoundNBT nbt) {
+	public final DungeonRoomEntry loadEntryFromNBT(LoadContext context, @Nullable ResourceLocation idOverride, CompoundTag nbt) {
 		Blueprint blueprint = loadBlueprintFromNBT(context, nbt);
 		
 		if (blueprint == null) {
@@ -130,7 +130,7 @@ public class DungeonRoomLoader {
 		// TODO join to master if this is a piece?
 		
 		List<String> tags = new LinkedList<>();
-		ListNBT list = nbt.getList(NBT_TAGS, NBT.TAG_STRING);
+		ListTag list = nbt.getList(NBT_TAGS, Tag.TAG_STRING);
 		
 		int tagCount = list.size();
 		for (int i = 0; i < tagCount; i++) {
@@ -167,11 +167,11 @@ public class DungeonRoomLoader {
 	public final File roomLoadFolder;
 	public final File roomSaveFolder;
 	
-	private final boolean writeRoomAsFileInternal(File saveFile, CompoundNBT blueprintTag, String name, int weight, int cost, List<String> tags) {
+	private final boolean writeRoomAsFileInternal(File saveFile, CompoundTag blueprintTag, String name, int weight, int cost, List<String> tags) {
 		boolean success = true;
 		
 		try {
-			CompressedStreamTools.writeCompressed(toNBT(blueprintTag, null, name, weight, cost, tags), new FileOutputStream(saveFile));
+			NbtIo.writeCompressed(toNBT(blueprintTag, null, name, weight, cost, tags), new FileOutputStream(saveFile));
 			//CompressedStreamTools.safeWrite(toNBT(blueprintTag, name, weight, tags), saveFile);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -203,7 +203,7 @@ public class DungeonRoomLoader {
 			
 			for (int i = 0; gen.hasNext(); i++) {
 				String fileName;
-				CompoundNBT nbt = gen.next();
+				CompoundTag nbt = gen.next();
 				if (i == 0) {
 					// Root room has extra info and needs to be identified
 					fileName = ROOM_ROOT_NAME;
@@ -230,18 +230,18 @@ public class DungeonRoomLoader {
 		return success;
 	}
 
-	public void loadServerData(List<CompoundNBT> roomData) {
+	public void loadServerData(List<CompoundTag> roomData) {
 		loadedRooms.clear();
 		final LoadContext context = new LoadContext("Server DataPack");
-		for (CompoundNBT tag : roomData) {
+		for (CompoundTag tag : roomData) {
 			loadedRooms.add(loadEntryFromNBT(context, null, tag));
 		}
 		
 		DungeonRoomRegistry.GetInstance().reload();
 	}
 	
-	public List<CompoundNBT> getServerData() {
-		List<CompoundNBT> data = new ArrayList<>(loadedRooms.size());
+	public List<CompoundTag> getServerData() {
+		List<CompoundTag> data = new ArrayList<>(loadedRooms.size());
 		for (DungeonRoomEntry room : loadedRooms) {
 			data.add(toNBT(room.blueprint.toNBTIgnoringSize(), room.id, room.name, room.weight, room.cost, room.tags));
 		}
@@ -275,7 +275,7 @@ public class DungeonRoomLoader {
 		}
 		
 		@Override
-		public void apply(Map<ResourceLocation, CompoundNBT> data, IResourceManager resourceManagerIn, IProfiler profilerIn) {
+		public void apply(Map<ResourceLocation, CompoundTag> data, ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
 			loadedRooms.clear();
 			if (data != null) {
 				AutoDungeons.LOGGER.info("Loading room blueprints from {} resources", data.size());
@@ -283,7 +283,7 @@ public class DungeonRoomLoader {
 				long now;
 				final DungeonRoomLoader loader = DungeonRoomLoader.instance();
 				
-				for (Entry<ResourceLocation, CompoundNBT> entry : data.entrySet()) {
+				for (Entry<ResourceLocation, CompoundTag> entry : data.entrySet()) {
 					final LoadContext context = new LoadContext(entry.getKey().toString());
 					
 					start = System.currentTimeMillis();
@@ -298,7 +298,7 @@ public class DungeonRoomLoader {
 		}
 	}
 	
-	private static class RoomCompReloadListener extends AutoReloadListener<Map<ResourceLocation, Map<String, CompoundNBT>>> {
+	private static class RoomCompReloadListener extends AutoReloadListener<Map<ResourceLocation, Map<String, CompoundTag>>> {
 		
 		private static RoomCompReloadListener lastInstance = null;
 		
@@ -316,7 +316,7 @@ public class DungeonRoomLoader {
 		}
 		
 		@Override
-		protected Map<ResourceLocation, Map<String, CompoundNBT>> prepareResource(Map<ResourceLocation, Map<String, CompoundNBT>> builder, ResourceLocation location, InputStream input) throws IOException, IllegalStateException {
+		protected Map<ResourceLocation, Map<String, CompoundTag>> prepareResource(Map<ResourceLocation, Map<String, CompoundTag>> builder, ResourceLocation location, InputStream input) throws IOException, IllegalStateException {
 			if (builder == null) {
 				builder = new HashMap<>();
 			}
@@ -334,10 +334,10 @@ public class DungeonRoomLoader {
 			}
 			
 			// Read NBT
-			CompoundNBT tag = CompressedStreamTools.readCompressed(input);
+			CompoundTag tag = NbtIo.readCompressed(input);
 			
 			// Add to map
-			CompoundNBT existing = builder.computeIfAbsent(location, p -> new HashMap<>())
+			CompoundTag existing = builder.computeIfAbsent(location, p -> new HashMap<>())
 				.put(subpath, tag);
 			
 			if (existing != null) {
@@ -348,14 +348,14 @@ public class DungeonRoomLoader {
 		}
 		
 		@Override
-		protected Map<ResourceLocation, Map<String, CompoundNBT>> checkPreparedData(Map<ResourceLocation, Map<String, CompoundNBT>> data, IResourceManager resourceManagerIn, IProfiler profilerIn) {
+		protected Map<ResourceLocation, Map<String, CompoundTag>> checkPreparedData(Map<ResourceLocation, Map<String, CompoundTag>> data, ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
 			// Verify each path has a root
 			if (data != null) {
-				Iterator<Entry<ResourceLocation, Map<String, CompoundNBT>>> it = data.entrySet().iterator();
+				Iterator<Entry<ResourceLocation, Map<String, CompoundTag>>> it = data.entrySet().iterator();
 				while (it.hasNext()) {
-					Entry<ResourceLocation, Map<String, CompoundNBT>> entry = it.next();
+					Entry<ResourceLocation, Map<String, CompoundTag>> entry = it.next();
 					final ResourceLocation compName = entry.getKey();
-					final Map<String, CompoundNBT> compData = entry.getValue();
+					final Map<String, CompoundTag> compData = entry.getValue();
 					if (!compData.containsKey(ROOM_ROOT_ID)) {
 						AutoDungeons.LOGGER.error("Failed to find root for room composition: " + compName);
 						it.remove();
@@ -366,7 +366,7 @@ public class DungeonRoomLoader {
 			return data;
 		}
 		
-		protected void loadComp(ResourceLocation comp, Map<String, CompoundNBT> data, IResourceManager resourceManagerIn, IProfiler profilerIn) {
+		protected void loadComp(ResourceLocation comp, Map<String, CompoundTag> data, ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
 			long start;
 			long now;
 			final DungeonRoomLoader loader = DungeonRoomLoader.instance();
@@ -383,7 +383,7 @@ public class DungeonRoomLoader {
 			if (root == null) {
 				AutoDungeons.LOGGER.error("Failed to load root for composite room " + comp);
 			} else {
-				for (Entry<String, CompoundNBT> compRow : data.entrySet()) {
+				for (Entry<String, CompoundTag> compRow : data.entrySet()) {
 					if (compRow.getKey().equalsIgnoreCase(ROOM_ROOT_ID)) {
 						continue; // handled outside of loop
 					}
@@ -410,16 +410,16 @@ public class DungeonRoomLoader {
 		}
 
 		@Override
-		public void apply(Map<ResourceLocation, Map<String, CompoundNBT>> data, IResourceManager resourceManagerIn, IProfiler profilerIn) {
+		public void apply(Map<ResourceLocation, Map<String, CompoundTag>> data, ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
 			// For each comp grouping...
 			loadedRooms.clear();
 			if (data != null) {
 				AutoDungeons.LOGGER.info("Loading {} room blueprint compositions", data.size());
 				int pieceCount = 0;
 				
-				for (Entry<ResourceLocation, Map<String, CompoundNBT>> entry : data.entrySet()) {
+				for (Entry<ResourceLocation, Map<String, CompoundTag>> entry : data.entrySet()) {
 					final ResourceLocation comp = entry.getKey();
-					final Map<String, CompoundNBT> compMap = entry.getValue();
+					final Map<String, CompoundTag> compMap = entry.getValue();
 					pieceCount += compMap.size();
 					loadComp(comp, compMap, resourceManagerIn, profilerIn);
 				}
@@ -448,11 +448,11 @@ public class DungeonRoomLoader {
 	}
 	
 	private static final class ReloadListenerData {
-		public Map<ResourceLocation, CompoundNBT> roomData;
-		public Map<ResourceLocation, Map<String, CompoundNBT>> compData;
+		public Map<ResourceLocation, CompoundTag> roomData;
+		public Map<ResourceLocation, Map<String, CompoundTag>> compData;
 	}
 	
-	public static class BlueprintReloadListener extends ReloadListener<ReloadListenerData> {
+	public static class BlueprintReloadListener extends SimplePreparableReloadListener<ReloadListenerData> {
 		
 		private final RoomReloadListener roomListener;
 		private final RoomCompReloadListener compListener;
@@ -463,7 +463,7 @@ public class DungeonRoomLoader {
 		}
 
 		@Override
-		protected ReloadListenerData prepare(IResourceManager resourceManagerIn, IProfiler profilerIn) {
+		protected ReloadListenerData prepare(ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
 			final ReloadListenerData data = new ReloadListenerData();
 			
 			// Note: this whole class is here so that after applying, we can trigger a dungeon room reload.
@@ -476,7 +476,7 @@ public class DungeonRoomLoader {
 		}
 
 		@Override
-		protected void apply(ReloadListenerData data, IResourceManager resourceManagerIn, IProfiler profilerIn) {
+		protected void apply(ReloadListenerData data, ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
 			this.roomListener.apply(data.roomData, resourceManagerIn, profilerIn);
 			this.compListener.apply(data.compData, resourceManagerIn, profilerIn);
 			

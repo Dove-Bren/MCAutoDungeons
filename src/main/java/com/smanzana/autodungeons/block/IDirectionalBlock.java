@@ -1,7 +1,7 @@
 package com.smanzana.autodungeons.block;
 
-import net.minecraft.state.DirectionProperty;
-import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 /**
  * Like HorizontalBlock but an interface

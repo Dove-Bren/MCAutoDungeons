@@ -8,10 +8,10 @@ import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.network.NetworkHandler;
 import com.smanzana.autodungeons.network.message.WorldKeySyncMessage;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.world.storage.WorldSavedData;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.saveddata.SavedData;
 
 /**
  * Allows blocks/items to grant 'keys' that can be used on other doors/chests to unlock them,
@@ -25,7 +25,7 @@ import net.minecraftforge.common.util.Constants.NBT;
  * @author Skyler
  *
  */
-public class WorldKeyRegistry extends WorldSavedData {
+public class WorldKeyRegistry extends SavedData {
 	
 	public static final String DATA_NAME = AutoDungeons.MODID + "_world_keys";
 	private static final String NBT_LIST = "key_map";
@@ -35,23 +35,24 @@ public class WorldKeyRegistry extends WorldSavedData {
 	private final Map<WorldKey, Integer> keys;
 	
 	public WorldKeyRegistry() {
-		this(DATA_NAME);
-	}
-
-	public WorldKeyRegistry(String name) {
-		super(name);
+		super();
 		
 		this.keys = new HashMap<>();
 	}
 
-	@Override
-	public void load(CompoundNBT nbt) {
-		keys.clear();
+	public static WorldKeyRegistry load(CompoundTag nbt) {
+		WorldKeyRegistry ret = new WorldKeyRegistry();
 		
-		ListNBT list = nbt.getList(NBT_LIST, NBT.TAG_COMPOUND);
+		ret.loadFromNBT(nbt);
+		
+		return ret;
+	}
+	
+	public void loadFromNBT(CompoundTag nbt) {
+		ListTag list = nbt.getList(NBT_LIST, Tag.TAG_COMPOUND);
 		for (int i = 0; i < list.size(); i++) {
-			CompoundNBT tag = list.getCompound(i);
-			CompoundNBT keyTag = tag.getCompound(NBT_KEY);
+			CompoundTag tag = list.getCompound(i);
+			CompoundTag keyTag = tag.getCompound(NBT_KEY);
 			final int count = tag.getInt(NBT_COUNT);
 			if (count > 0) {
 				keys.put(WorldKey.fromNBT(keyTag), count);
@@ -62,14 +63,14 @@ public class WorldKeyRegistry extends WorldSavedData {
 	}
 
 	@Override
-	public CompoundNBT save(CompoundNBT compound) {
-		ListNBT list = new ListNBT();
+	public CompoundTag save(CompoundTag compound) {
+		ListTag list = new ListTag();
 		for (Entry<WorldKey, Integer> entry : keys.entrySet()) {
 			if (entry.getValue() == null || entry.getValue() <= 0) {
 				continue;
 			}
 			
-			CompoundNBT tag = new CompoundNBT();
+			CompoundTag tag = new CompoundTag();
 			tag.put(NBT_KEY, entry.getKey().asNBT());
 			tag.putInt(NBT_COUNT, entry.getValue());
 			list.add(tag);

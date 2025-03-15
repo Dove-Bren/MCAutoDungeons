@@ -10,22 +10,22 @@ import com.smanzana.autodungeons.block.IEntryMarker;
 import com.smanzana.autodungeons.block.IExitMarker;
 import com.smanzana.autodungeons.block.IHorizontalBlock;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.block.DirectionalBlock;
-import net.minecraft.block.HorizontalBlock;
-import net.minecraft.block.LadderBlock;
-import net.minecraft.block.RedstoneWallTorchBlock;
-import net.minecraft.block.StairsBlock;
-import net.minecraft.block.WallTorchBlock;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.DirectionalBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.RedstoneWallTorchBlock;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.WallTorchBlock;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LevelAccessor;
 
 public class BlueprintBlock {
 		
@@ -39,7 +39,7 @@ public class BlueprintBlock {
 		BLUEPRINT_CACHE.put(state, block);
 	}
 	
-	public static BlueprintBlock getBlueprintBlock(BlockState state, CompoundNBT teData) {
+	public static BlueprintBlock getBlueprintBlock(BlockState state, CompoundTag teData) {
 		BlueprintBlock block = null;
 		if (teData == null) {
 			block = CHECK_BLUEPRINT_CACHE(state);
@@ -60,9 +60,9 @@ public class BlueprintBlock {
 	}
 	
 	private BlockState state;
-	private CompoundNBT tileEntityData;
+	private CompoundTag tileEntityData;
 	
-	private BlueprintBlock(BlockState state, CompoundNBT teData) {
+	private BlueprintBlock(BlockState state, CompoundTag teData) {
 		this.state = state;
 		this.tileEntityData = teData;
 		
@@ -73,14 +73,14 @@ public class BlueprintBlock {
 		}
 	}
 	
-	public BlueprintBlock(IWorld world, BlockPos pos) {
+	public BlueprintBlock(LevelAccessor world, BlockPos pos) {
 		if (world.isEmptyBlock(pos)) {
 			; //leave null
 		} else {
 			this.state = world.getBlockState(pos);
-			TileEntity te = world.getBlockEntity(pos);
+			BlockEntity te = world.getBlockEntity(pos);
 			if (te != null) {
-				this.tileEntityData = new CompoundNBT();
+				this.tileEntityData = new CompoundTag();
 				te.save(this.tileEntityData);
 			}
 		}
@@ -95,9 +95,9 @@ public class BlueprintBlock {
 	private static final String NBT_TILE_ENTITY = "te_data";
 	private static final String NBT_BLOCKSTATE_TAG = "blockstate";
 	
-	public static BlueprintBlock fromNBT(byte version, CompoundNBT nbt) {
+	public static BlueprintBlock fromNBT(byte version, CompoundTag nbt) {
 		BlockState state = null;
-		CompoundNBT teData = null;
+		CompoundTag teData = null;
 		switch (version) {
 		case 0:
 //				state = Block.getStateById(nbt.getInt(NBT_BLOCK));
@@ -121,7 +121,7 @@ public class BlueprintBlock {
 			// No more meta, so this doesn't work anymore
 			throw new RuntimeException("Blueprint block doesn't understand version " + version);
 		case 3:
-			state = NBTUtil.readBlockState(nbt.getCompound(NBT_BLOCKSTATE_TAG));
+			state = NbtUtils.readBlockState(nbt.getCompound(NBT_BLOCKSTATE_TAG));
 			
 			if (state != null && nbt.contains(NBT_TILE_ENTITY)) {
 				teData = nbt.getCompound(NBT_TILE_ENTITY);
@@ -134,8 +134,8 @@ public class BlueprintBlock {
 		return BlueprintBlock.getBlueprintBlock(state, teData);
 	}
 	
-	public CompoundNBT toNBT() {
-		CompoundNBT tag = new CompoundNBT();
+	public CompoundTag toNBT() {
+		CompoundTag tag = new CompoundTag();
 		
 		// Version 0
 //			if (state != null) {
@@ -156,7 +156,7 @@ public class BlueprintBlock {
 		
 		// Version 3
 		if (state != null) {
-			tag.put(NBT_BLOCKSTATE_TAG, NBTUtil.writeBlockState(state));
+			tag.put(NBT_BLOCKSTATE_TAG, NbtUtils.writeBlockState(state));
 			if (tileEntityData != null) {
 				tag.put(NBT_TILE_ENTITY, tileEntityData);
 			}
@@ -185,10 +185,10 @@ public class BlueprintBlock {
 			if (facing != null && facing.getOpposite().get2DDataValue() != 0) {
 				
 				Block block = placeState.getBlock();
-				if (block instanceof HorizontalBlock) {
-					Direction cur = placeState.getValue(HorizontalBlock.FACING);
+				if (block instanceof HorizontalDirectionalBlock) {
+					Direction cur = placeState.getValue(HorizontalDirectionalBlock.FACING);
 					cur = rotate(cur, facing);
-					placeState = placeState.setValue(HorizontalBlock.FACING, cur);
+					placeState = placeState.setValue(HorizontalDirectionalBlock.FACING, cur);
 				} else if (block instanceof WallTorchBlock) {
 					Direction cur = placeState.getValue(WallTorchBlock.FACING);
 					cur = rotate(cur, facing);
@@ -201,10 +201,10 @@ public class BlueprintBlock {
 					Direction cur = placeState.getValue(LadderBlock.FACING);
 					cur = rotate(cur, facing);
 					placeState = placeState.setValue(LadderBlock.FACING, cur);
-				} else if (block instanceof StairsBlock) {
-					Direction cur = placeState.getValue(StairsBlock.FACING);
+				} else if (block instanceof StairBlock) {
+					Direction cur = placeState.getValue(StairBlock.FACING);
 					cur = rotate(cur, facing);
-					placeState = placeState.setValue(StairsBlock.FACING, cur);
+					placeState = placeState.setValue(StairBlock.FACING, cur);
 				} else if (block instanceof DirectionalBlock) {
 					// Only want to rotate horizontally
 					Direction cur = placeState.getValue(DirectionalBlock.FACING);
@@ -235,7 +235,7 @@ public class BlueprintBlock {
 		}
 	}
 	
-	public CompoundNBT getTileEntityData() {
+	public CompoundTag getTileEntityData() {
 		return tileEntityData;
 	}
 	
@@ -250,16 +250,16 @@ public class BlueprintBlock {
 			ret = ((IExitMarker) block).getFacing(state);
 			// HACK: Reverse if special exit block cause they're backwards LOL
 			ret = ret.getOpposite();
-		} else if (block instanceof HorizontalBlock) {
-			ret = state.getValue(HorizontalBlock.FACING);
+		} else if (block instanceof HorizontalDirectionalBlock) {
+			ret = state.getValue(HorizontalDirectionalBlock.FACING);
 		} else if (block instanceof WallTorchBlock) {
 			ret = state.getValue(WallTorchBlock.FACING);
 		} else if (block instanceof RedstoneWallTorchBlock) {
 			ret = state.getValue(RedstoneWallTorchBlock.FACING);
 		} else if (block instanceof LadderBlock) {
 			ret = state.getValue(LadderBlock.FACING);
-		} else if (block instanceof StairsBlock) {
-			ret = state.getValue(StairsBlock.FACING);
+		} else if (block instanceof StairBlock) {
+			ret = state.getValue(StairBlock.FACING);
 		} else if (block instanceof DirectionalBlock) {
 			ret = state.getValue(DirectionalBlock.FACING);
 		} else if (block instanceof IDirectionalBlock) {
@@ -274,7 +274,7 @@ public class BlueprintBlock {
 		return this.state;
 	}
 	
-	public @Nullable CompoundNBT getRawTileEntityData() {
+	public @Nullable CompoundTag getRawTileEntityData() {
 		return this.tileEntityData;
 	}
 }

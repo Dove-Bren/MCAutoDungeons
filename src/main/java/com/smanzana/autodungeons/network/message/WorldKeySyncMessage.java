@@ -5,9 +5,9 @@ import java.util.function.Supplier;
 import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.world.WorldKeyRegistry;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 
 /**
  * Server is sending updated world key information to a client
@@ -20,25 +20,25 @@ public class WorldKeySyncMessage {
 		ctx.get().setPacketHandled(true);
 		ctx.get().enqueueWork(() -> {
 			AutoDungeons.LOGGER.debug("Recieved world key update message from server");
-			AutoDungeons.GetWorldKeys().deserializeNBT(message.keyData);
+			AutoDungeons.GetWorldKeys().loadFromNBT(message.keyData);
 		});
 	}
 		
-	private final CompoundNBT keyData;
+	private final CompoundTag keyData;
 	
-	public WorldKeySyncMessage(CompoundNBT keyData) {
+	public WorldKeySyncMessage(CompoundTag keyData) {
 		this.keyData = keyData;
 	}
 	
 	public WorldKeySyncMessage(WorldKeyRegistry registry) {
-		this(registry.serializeNBT());
+		this(registry.save(new CompoundTag()));
 	}
 
-	public static WorldKeySyncMessage decode(PacketBuffer buf) {
+	public static WorldKeySyncMessage decode(FriendlyByteBuf buf) {
 		return new WorldKeySyncMessage(buf.readNbt());
 	}
 
-	public static void encode(WorldKeySyncMessage msg, PacketBuffer buf) {
+	public static void encode(WorldKeySyncMessage msg, FriendlyByteBuf buf) {
 		buf.writeNbt(msg.keyData);
 	}
 

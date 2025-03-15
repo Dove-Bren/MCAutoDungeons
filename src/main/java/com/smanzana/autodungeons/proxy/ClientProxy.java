@@ -6,7 +6,7 @@ import com.smanzana.autodungeons.client.overlay.OverlayRenderer;
 import com.smanzana.autodungeons.client.render.BlueprintRenderer;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 
 public class ClientProxy extends CommonProxy {
 	private OverlayRenderer overlayRenderer;
@@ -24,7 +24,7 @@ public class ClientProxy extends CommonProxy {
 	}
 	
 	@Override
-	public @Nullable PlayerEntity getPlayer() {
+	public @Nullable Player getPlayer() {
 		final Minecraft mc = Minecraft.getInstance();
 		return mc.player;
 	}
@@ -35,12 +35,12 @@ public class ClientProxy extends CommonProxy {
 	}
 	
 	@Override
-	public void syncDungeonDefinitions(PlayerEntity player) {
+	public void syncDungeonDefinitions(Player player) {
 		; // don't do anything for integrated or client
 	}
 	
 	@Override
-	public void syncWorldKeys(PlayerEntity player) {
+	public void syncWorldKeys(Player player) {
 		;
 	}
 	

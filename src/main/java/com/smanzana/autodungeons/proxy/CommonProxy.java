@@ -8,8 +8,8 @@ import com.smanzana.autodungeons.network.message.DungeonRoomDataSyncMessage;
 import com.smanzana.autodungeons.network.message.WorldKeySyncMessage;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomLoader;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 
@@ -23,7 +23,7 @@ public class CommonProxy {
 		return true;
 	}
 	
-	public @Nullable PlayerEntity getPlayer() {
+	public @Nullable Player getPlayer() {
 		return null;
 	}
 
@@ -31,12 +31,12 @@ public class CommonProxy {
 		return false;
 	}
 	
-	public void syncDungeonDefinitions(PlayerEntity player) {
-		NetworkHandler.sendTo(new DungeonRoomDataSyncMessage(DungeonRoomLoader.instance()), (ServerPlayerEntity) player);
+	public void syncDungeonDefinitions(Player player) {
+		NetworkHandler.sendTo(new DungeonRoomDataSyncMessage(DungeonRoomLoader.instance()), (ServerPlayer) player);
 	}
 	
-	public void syncWorldKeys(PlayerEntity player) {
-		NetworkHandler.sendTo(new WorldKeySyncMessage(AutoDungeons.GetWorldKeys()), (ServerPlayerEntity) player);
+	public void syncWorldKeys(Player player) {
+		NetworkHandler.sendTo(new WorldKeySyncMessage(AutoDungeons.GetWorldKeys()), (ServerPlayer) player);
 	}
 	
 	public void onPlayerLogin(PlayerLoggedInEvent event) {

@@ -6,7 +6,7 @@ import javax.annotation.Nonnull;
 
 import com.smanzana.autodungeons.util.NetUtils;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 public class WorldKey {
 	
@@ -41,14 +41,14 @@ public class WorldKey {
 		return mutateWithID(other.id);
 	}
 	
-	public CompoundNBT asNBT() {
-		CompoundNBT nbt = new CompoundNBT();
+	public CompoundTag asNBT() {
+		CompoundTag nbt = new CompoundTag();
 		nbt.putUUID(NBT_ID, id);
 		;//nbt.putInt(NBT_COLOR, color);
 		return nbt;
 	}
 	
-	public static WorldKey fromNBT(CompoundNBT nbt) {
+	public static WorldKey fromNBT(CompoundTag nbt) {
 		UUID id = nbt.getUUID(NBT_ID);
 		;//int color = nbt.getInt(NBT_COLOR);
 		return new WorldKey(id);//, color);

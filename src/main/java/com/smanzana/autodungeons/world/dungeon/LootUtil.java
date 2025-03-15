@@ -2,24 +2,24 @@ package com.smanzana.autodungeons.world.dungeon;
 
 import java.util.Random;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.ChestTileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LevelAccessor;
 
 public final class LootUtil {
 	
 	public static final Random rand = new Random();
 
-	public static final void generateLoot(IWorld world, BlockPos pos, Direction facing, ResourceLocation loottable) {
+	public static final void generateLoot(LevelAccessor world, BlockPos pos, Direction facing, ResourceLocation loottable) {
 		world.setBlock(pos, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, facing), 2);
 		
-		ChestTileEntity chest = (ChestTileEntity) world.getBlockEntity(pos);
+		ChestBlockEntity chest = (ChestBlockEntity) world.getBlockEntity(pos);
 		
 		if (chest == null) {
 			world.setBlock(pos, Blocks.GOLD_BLOCK.defaultBlockState(), 2);
@@ -36,11 +36,11 @@ public final class LootUtil {
 	 * @param facing
 	 * @param loot
 	 */
-	public static final void createLoot(IWorld world, BlockPos pos, Direction facing,
+	public static final void createLoot(LevelAccessor world, BlockPos pos, Direction facing,
 			NonNullList<ItemStack> loot) {
 		world.setBlock(pos, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, facing), 2); // 2 here assumes world is generating and block updates shouldn't happen
 		
-		ChestTileEntity chest = (ChestTileEntity) world.getBlockEntity(pos);
+		ChestBlockEntity chest = (ChestBlockEntity) world.getBlockEntity(pos);
 		int len = Math.min(27, loot.size());
 		for (int i = 0; i < len; i++) {
 			chest.setItem(i, loot.get(i));

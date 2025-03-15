@@ -9,19 +9,19 @@ import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.tile.IOrientedTileEntity;
 import com.smanzana.autodungeons.util.WorldUtil;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.NBTUtil;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorld;
-import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 /**
  * Contains all the data needed to spawn a blueprint in the world
@@ -46,12 +46,12 @@ public class Blueprint implements IBlueprint {
 	
 	protected static class CaptureContext {
 		public final Blueprint blueprint;
-		public final IWorld world;
+		public final LevelAccessor world;
 		public final BlockPos pos1;
 		public final BlockPos pos2;
 		public final @Nullable BlueprintLocation origin;
 		
-		public CaptureContext(Blueprint blueprint, IWorld world, BlockPos pos1, BlockPos pos2, BlueprintLocation origin) {
+		public CaptureContext(Blueprint blueprint, LevelAccessor world, BlockPos pos1, BlockPos pos2, BlueprintLocation origin) {
 			this.blueprint = blueprint;
 			this.world = world;
 			this.pos1 = pos1;
@@ -90,17 +90,17 @@ public class Blueprint implements IBlueprint {
 		refreshPreview();
 	}
 	
-	public static Blueprint Capture(IWorld world, BlockPos pos1, BlockPos pos2, @Nullable BlueprintLocation origin) {
+	public static Blueprint Capture(LevelAccessor world, BlockPos pos1, BlockPos pos2, @Nullable BlueprintLocation origin) {
 		Blueprint blueprint = new Blueprint(null, null, null);
 		blueprint.capture(world, pos1, pos2, origin);
 		return blueprint;
 	}
 	
-	protected CaptureContext makeCaptureContext(IWorld world, BlockPos pos1, BlockPos pos2, @Nullable BlueprintLocation origin) {
+	protected CaptureContext makeCaptureContext(LevelAccessor world, BlockPos pos1, BlockPos pos2, @Nullable BlueprintLocation origin) {
 		return new CaptureContext(this, world, pos1, pos2, origin);
 	}
 	
-	protected BlueprintBlock captureBlock(CaptureContext context, IWorld world, BlockPos pos) {
+	protected BlueprintBlock captureBlock(CaptureContext context, LevelAccessor world, BlockPos pos) {
 		return new BlueprintBlock(world, pos);
 	}
 	
@@ -115,7 +115,7 @@ public class Blueprint implements IBlueprint {
 	 * @param pos1
 	 * @param pos2
 	 */
-	protected void capture(IWorld world, BlockPos pos1, BlockPos pos2, @Nullable BlueprintLocation origin) {
+	protected void capture(LevelAccessor world, BlockPos pos1, BlockPos pos2, @Nullable BlueprintLocation origin) {
 		// fix positions
 		BlockPos low = new BlockPos(pos1.getX() < pos2.getX() ? pos1.getX() : pos2.getX(),
 				pos1.getY() < pos2.getY() ? pos1.getY() : pos2.getY(),
@@ -130,7 +130,7 @@ public class Blueprint implements IBlueprint {
 
 		final CaptureContext context = makeCaptureContext(world, pos1, pos2, origin);
 		
-		BlockPos.Mutable cursor = new BlockPos.Mutable();
+		BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 		this.dimensions = new BlockPos(
 				1 + (pos2.getX() - pos1.getX()),
 				1 + (pos2.getY() - pos1.getY()),
@@ -208,7 +208,7 @@ public class Blueprint implements IBlueprint {
 		return false;
 	}
 	
-	protected void fixupTileEntity(TileEntity te, Direction direction, BlueprintSpawnContext context) {
+	protected void fixupTileEntity(BlockEntity te, Direction direction, BlueprintSpawnContext context) {
 		if (te instanceof IOrientedTileEntity) {
 			// Let tile ent respond to rotation
 			((IOrientedTileEntity) te).setSpawnedFromRotation(direction, context.isWorldGen);
@@ -217,7 +217,7 @@ public class Blueprint implements IBlueprint {
 	
 	protected void placeBlock(BlueprintSpawnContext context, BlockPos at, Direction direction, BlueprintBlock block) {
 		BlockState placeState;
-		TileEntity te = null;
+		BlockEntity te = null;
 		
 		if (context.placer == null || !context.placer.spawnBlock(context, at, direction, block)) {
 			placeState = block.getSpawnState(direction);
@@ -234,15 +234,15 @@ public class Blueprint implements IBlueprint {
 					}
 				}
 				
-				CompoundNBT tileEntityData = block.getTileEntityData();
+				CompoundTag tileEntityData = block.getTileEntityData();
 				if (tileEntityData != null) {
-					te = TileEntity.loadStatic(placeState, tileEntityData.copy());
+					te = BlockEntity.loadStatic(at, placeState, tileEntityData.copy());
 					
 					if (te != null) {
-						if (context.isWorldGen || !(context.world instanceof IServerWorld)) {
-							context.world.getChunk(at).setBlockEntity(at, te);
+						if (context.isWorldGen || !(context.world instanceof ServerLevelAccessor)) {
+							context.world.getChunk(at).setBlockEntity(te);
 						} else {
-							((IServerWorld) context.world).getLevel().setBlockEntity(at, te);
+							((ServerLevelAccessor) context.world).getLevel().setBlockEntity(te);
 						}
 						this.fixupTileEntity(te, direction, context);
 					} else {
@@ -265,12 +265,12 @@ public class Blueprint implements IBlueprint {
 		}
 	}
 	
-	protected BlueprintSpawnContext makeContext(IWorld world, BlockPos at, Direction direction, boolean isWorldGen, MutableBoundingBox bounds, IBlueprintBlockPlacer placer) {
+	protected BlueprintSpawnContext makeContext(LevelAccessor world, BlockPos at, Direction direction, boolean isWorldGen, BoundingBox bounds, IBlueprintBlockPlacer placer) {
 		return new BlueprintSpawnContext(world, at, direction, isWorldGen, bounds, placer);
 	}
 	
 	@Override
-	public void spawn(IWorld world, BlockPos at, Direction direction, @Nullable MutableBoundingBox bounds, @Nullable IBlueprintBlockPlacer placer) {
+	public void spawn(LevelAccessor world, BlockPos at, Direction direction, @Nullable BoundingBox bounds, @Nullable IBlueprintBlockPlacer placer) {
 		final boolean worldGen = WorldUtil.IsWorldGen(world);
 		BlueprintSpawnContext context = makeContext(world, at, direction, worldGen, bounds, placer);
 		spawnWithContext(context);
@@ -281,7 +281,7 @@ public class Blueprint implements IBlueprint {
 		final int width = dimensions.getX();
 		final int height = dimensions.getY();
 		final int length = dimensions.getZ();
-		BlockPos.Mutable cursor = new BlockPos.Mutable();
+		BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 		Direction modDir = Direction.NORTH; // 0
 		
 		// Apply rotation changes
@@ -308,7 +308,7 @@ public class Blueprint implements IBlueprint {
 		// To get actual least-x leastz coordinates, we need to add offset rotated to proper orientation
 		BlockPos origin;
 		{
-			BlockPos.Mutable rotOffset = new BlockPos.Mutable().set(IBlueprint.ApplyRotation(offset, modDir));
+			BlockPos.MutableBlockPos rotOffset = new BlockPos.MutableBlockPos().set(IBlueprint.ApplyRotation(offset, modDir));
 			//BlockPos rotOffset = applyRotation(offset, modDir.getHorizontalIndex() % 2 == 1 ? modDir.getOpposite() : modDir);
 			
 			// To get proper offset, need to move so that our old origin (0,0) is at the real one, which is encoded in our adjusted dimensions
@@ -509,18 +509,18 @@ public class Blueprint implements IBlueprint {
 		}
 	}
 	
-	private void deserializeNBTStyleInternal(CompoundNBT nbt, byte version) {
-		BlockPos dims = NBTUtil.readBlockPos(nbt.getCompound(NBT_DIMS));
+	private void deserializeNBTStyleInternal(CompoundTag nbt, byte version) {
+		BlockPos dims = NbtUtils.readBlockPos(nbt.getCompound(NBT_DIMS));
 		// When breaking blueprints into pieces, the first one has an actual copy of the real size of the whole thing.
 		// If we have one of those, allocate the FULL array size instead of the small one
-		BlockPos masterDims = NBTUtil.readBlockPos(nbt.getCompound(NBT_WHOLE_DIMS));
+		BlockPos masterDims = NbtUtils.readBlockPos(nbt.getCompound(NBT_WHOLE_DIMS));
 		BlueprintBlock[] blocks = null;
 		BlueprintLocation entry = null;
 		
 		if (dims.distSqr(0, 0, 0, false) == 0) {
 			return;
 		} else {
-			ListNBT list = nbt.getList(NBT_BLOCK_LIST, NBT.TAG_COMPOUND);
+			ListTag list = nbt.getList(NBT_BLOCK_LIST, Tag.TAG_COMPOUND);
 			
 			final int count = dims.getX() * dims.getY() * dims.getZ();
 			if (count != list.size()) {
@@ -540,7 +540,7 @@ public class Blueprint implements IBlueprint {
 			}
 			
 			for (int i = 0; i < count; i++) {
-				CompoundNBT tag = (CompoundNBT) list.get(i);
+				CompoundTag tag = (CompoundTag) list.get(i);
 				blocks[i] = BlueprintBlock.fromNBT((byte)version, tag);
 			}
 			
@@ -549,7 +549,7 @@ public class Blueprint implements IBlueprint {
 //			}
 			
 			if (nbt.contains(NBT_ENTRY)) {
-				CompoundNBT tag = nbt.getCompound(NBT_ENTRY);
+				CompoundTag tag = nbt.getCompound(NBT_ENTRY);
 				entry = BlueprintLocation.fromNBT(tag);
 			}
 			
@@ -563,7 +563,7 @@ public class Blueprint implements IBlueprint {
 		this.entry = entry;
 	}
 	
-	private void deserializeVersion4(CompoundNBT nbt) {
+	private void deserializeVersion4(CompoundTag nbt) {
 		deserializeNBTStyleInternal(nbt, (byte) 3);
 		
 		if (nbt.contains(NBT_PIECE_OFFSET)) {
@@ -571,7 +571,7 @@ public class Blueprint implements IBlueprint {
 		}
 	}
 	
-	protected Blueprint(LoadContext context, CompoundNBT nbt) {
+	protected Blueprint(LoadContext context, CompoundTag nbt) {
 		this(null, null, null);
 		
 		byte version = nbt.getByte(NBT_VERSION);
@@ -588,11 +588,11 @@ public class Blueprint implements IBlueprint {
 		}
 	}
 	
-	public static Blueprint FromNBT(LoadContext context, CompoundNBT nbt) {
+	public static Blueprint FromNBT(LoadContext context, CompoundTag nbt) {
 		return new Blueprint(context, nbt);
 	}
 	
-	public CompoundNBT toNBT() {
+	public CompoundTag toNBT() {
 		if (shouldSplit()) {
 			// Too big! Use toNBTWithBreakdown() instead!
 			throw new RuntimeException("Blueprint too large to be written as single blob!");
@@ -601,7 +601,7 @@ public class Blueprint implements IBlueprint {
 		return toNBTInternal(0, MAX_BLUEPRINT_BLOCKS);
 	}
 	
-	public CompoundNBT toNBTIgnoringSize() {
+	public CompoundTag toNBTIgnoringSize() {
 		return toNBTInternal(0, Integer.MAX_VALUE);
 	}
 	
@@ -611,7 +611,7 @@ public class Blueprint implements IBlueprint {
 				boolean used = false;
 				
 				@Override
-				public CompoundNBT next() {
+				public CompoundTag next() {
 					used = true;
 					return toNBT();
 				}
@@ -644,7 +644,7 @@ public class Blueprint implements IBlueprint {
 			int i = 0;
 			
 			@Override
-			public CompoundNBT next() {
+			public CompoundTag next() {
 				if (i >= xSlices) {
 					return null;
 				}
@@ -665,10 +665,10 @@ public class Blueprint implements IBlueprint {
 	}
 	
 	// Version 4
-	protected CompoundNBT toNBTInternal(int startIdx, int count) {
+	protected CompoundTag toNBTInternal(int startIdx, int count) {
 		
-		CompoundNBT nbt = new CompoundNBT();
-		ListNBT list = new ListNBT();
+		CompoundTag nbt = new CompoundTag();
+		ListTag list = new ListTag();
 		final int endIdx = Math.min(blocks.length, startIdx + count);
 		
 		if (blocks != null) {
@@ -681,12 +681,12 @@ public class Blueprint implements IBlueprint {
 		{
 			// If whole struct, just dump dims
 			if (startIdx == 0 && endIdx == blocks.length) {
-				nbt.put(NBT_DIMS, NBTUtil.writeBlockPos(dimensions));
+				nbt.put(NBT_DIMS, NbtUtils.writeBlockPos(dimensions));
 			} else {
 				// Else figure out how big it was
 				final int numBlocks = endIdx - startIdx;
 				final int base = dimensions.getY() * dimensions.getZ();
-				nbt.put(NBT_DIMS, NBTUtil.writeBlockPos(new BlockPos(numBlocks / base, dimensions.getY(), dimensions.getZ())));
+				nbt.put(NBT_DIMS, NbtUtils.writeBlockPos(new BlockPos(numBlocks / base, dimensions.getY(), dimensions.getZ())));
 			}
 		}
 		if (this.entry != null) {
@@ -696,7 +696,7 @@ public class Blueprint implements IBlueprint {
 		// First blueprint (when splitting) has all the extra pieces
 		if (startIdx == 0) {
 			// Master ALSO has the REAL size, so we can allocate all the space up front instead of resizing
-			nbt.put(NBT_WHOLE_DIMS, NBTUtil.writeBlockPos(dimensions));
+			nbt.put(NBT_WHOLE_DIMS, NbtUtils.writeBlockPos(dimensions));
 		} else {
 			// Others have their row offset recorded
 			nbt.putInt(NBT_PIECE_OFFSET, startIdx / (dimensions.getY() * dimensions.getZ()));
@@ -709,7 +709,7 @@ public class Blueprint implements IBlueprint {
 	
 	public static interface INBTGenerator {
 		
-		public CompoundNBT next();
+		public CompoundTag next();
 		
 		public int getTotal();
 		

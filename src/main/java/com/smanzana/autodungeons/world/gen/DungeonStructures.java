@@ -2,8 +2,8 @@ package com.smanzana.autodungeons.world.gen;
 
 import com.smanzana.autodungeons.AutoDungeons;
 
-import net.minecraft.world.gen.feature.structure.IStructurePieceType;
-import net.minecraft.world.gen.feature.structure.Structure;
+import net.minecraft.world.level.levelgen.feature.StructurePieceType;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.Mod;
 public class DungeonStructures {
 
 	@SubscribeEvent
-	public static void registerStructures(RegistryEvent.Register<Structure<?>> event) {
+	public static void registerStructures(RegistryEvent.Register<StructureFeature<?>> event) {
 		registerStructurePieceTypes();
 	}
 	
@@ -20,6 +20,6 @@ public class DungeonStructures {
 	//public static void registerStructurePieceTypes(RegistryEvent.Register<IStructurePieceType> event) {
 	protected static void registerStructurePieceTypes() {
 		//event.getRegistry().register(NostrumDungeonStructure.DungeonPieceSerializer.instance);
-		IStructurePieceType.setPieceId(DungeonStructure.DungeonPieceSerializer.instance, DungeonStructure.DungeonPieceSerializer.PIECE_ID);
+		StructurePieceType.setPieceId(DungeonStructure.DungeonPieceSerializer.instance, DungeonStructure.DungeonPieceSerializer.PIECE_ID);
 	}
 }

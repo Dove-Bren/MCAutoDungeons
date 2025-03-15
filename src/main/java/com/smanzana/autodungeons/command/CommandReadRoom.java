@@ -12,19 +12,19 @@ import com.smanzana.autodungeons.event.GetPlayerSelectionEvent;
 import com.smanzana.autodungeons.world.blueprints.Blueprint;
 import com.smanzana.autodungeons.world.blueprints.Blueprint.LoadContext;
 
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.util.Direction;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.server.command.EnumArgument;
 
 public class CommandReadRoom {
 	
-	public static final void register(CommandDispatcher<CommandSource> dispatcher) {
+	public static final void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(
 				Commands.literal("readroom")
 					.requires(s -> s.hasPermission(2))
@@ -37,11 +37,11 @@ public class CommandReadRoom {
 				);
 	}
 
-	private static final int execute(CommandContext<CommandSource> context, final String name, final Direction facing) throws CommandSyntaxException {
-		ServerPlayerEntity player = context.getSource().getPlayerOrException();
+	private static final int execute(CommandContext<CommandSourceStack> context, final String name, final Direction facing) throws CommandSyntaxException {
+		ServerPlayer player = context.getSource().getPlayerOrException();
 		
 		if (!player.isCreative()) {
-			context.getSource().sendSuccess(new StringTextComponent("This command must be run as a creative player"), true);
+			context.getSource().sendSuccess(new TextComponent("This command must be run as a creative player"), true);
 			return 1;
 		}
 		
@@ -50,7 +50,7 @@ public class CommandReadRoom {
 		MinecraftForge.EVENT_BUS.post(event);
 		
 		if (event.getSelection() == null) {
-			context.getSource().sendSuccess(new StringTextComponent("No selected position was obtained by any providing mods"), true);
+			context.getSource().sendSuccess(new TextComponent("No selected position was obtained by any providing mods"), true);
 			return 1;
 		}
 		
@@ -59,31 +59,31 @@ public class CommandReadRoom {
 			file = new File("./DungeonData/room_blueprint_captures/" + name + ".gat");
 		}
 		if (file.exists()) {
-			CompoundNBT nbt = null;
+			CompoundTag nbt = null;
 			try {
 				if (file.getName().endsWith(".gat")) {
-					nbt = CompressedStreamTools.readCompressed(new FileInputStream(file));
+					nbt = NbtIo.readCompressed(new FileInputStream(file));
 				} else {
-					nbt = CompressedStreamTools.read(file);
+					nbt = NbtIo.read(file);
 				}
-				context.getSource().sendSuccess(new StringTextComponent("Room read from " + file.getPath()), true);
+				context.getSource().sendSuccess(new TextComponent("Room read from " + file.getPath()), true);
 			} catch (IOException e) {
 				e.printStackTrace();
 				
 				System.out.println("Failed to read out serialized file " + file.toString());
-				context.getSource().sendSuccess(new StringTextComponent("Failed to read room"), true);
+				context.getSource().sendSuccess(new TextComponent("Failed to read room"), true);
 			}
 			
 			if (nbt != null) {
-				Blueprint blueprint = Blueprint.FromNBT(new LoadContext(file.getAbsolutePath()), (CompoundNBT) nbt.get("blueprint"));
+				Blueprint blueprint = Blueprint.FromNBT(new LoadContext(file.getAbsolutePath()), (CompoundTag) nbt.get("blueprint"));
 				if (blueprint != null) {
 					blueprint.spawn(player.level, event.getSelection(), facing, null, null);
 				} else {
-					context.getSource().sendSuccess(new StringTextComponent("Room failed to load"), true);
+					context.getSource().sendSuccess(new TextComponent("Room failed to load"), true);
 				}
 			}
 		} else {
-			context.getSource().sendSuccess(new StringTextComponent("Room not found"), true);
+			context.getSource().sendSuccess(new TextComponent("Room not found"), true);
 		}
 		
 		return 0;

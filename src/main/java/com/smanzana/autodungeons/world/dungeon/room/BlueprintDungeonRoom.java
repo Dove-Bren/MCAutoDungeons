@@ -23,15 +23,15 @@ import com.smanzana.autodungeons.world.blueprints.BlueprintSpawnContext;
 import com.smanzana.autodungeons.world.blueprints.IBlueprint;
 import com.smanzana.autodungeons.world.blueprints.IBlueprintBlockPlacer;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.world.IWorld;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.level.LevelAccessor;
 
 /**
  * Room where the room structure is a blueprint.
@@ -56,7 +56,7 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 		}
 		
 		@Override
-		public void finalizeBlock(BlueprintSpawnContext context, BlockPos pos, BlockState placedState, @Nullable TileEntity te, Direction direction, BlueprintBlock block) {
+		public void finalizeBlock(BlueprintSpawnContext context, BlockPos pos, BlockState placedState, @Nullable BlockEntity te, Direction direction, BlueprintBlock block) {
 			if (te != null) {
 				if (te instanceof IUniqueBlueprintTileEntity) {
 					((IUniqueBlueprintTileEntity) te).onRoomBlueprintSpawn(dungeonID, roomID, context.isWorldGen);
@@ -146,7 +146,7 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 	}
 	
 	@Override
-	public boolean canSpawnAt(IWorld world, BlueprintLocation start) {
+	public boolean canSpawnAt(LevelAccessor world, BlueprintLocation start) {
 		BlockPos dims = getBlueprint().getAdjustedDimensions(start.getFacing());
 		BlockPos offset = getBlueprint().getAdjustedOffset(start.getFacing());
 		
@@ -171,7 +171,7 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 	}
 	
 	@Override
-	public void spawn(IWorld world, BlueprintLocation start, @Nullable MutableBoundingBox bounds, UUID dungeonID) {
+	public void spawn(LevelAccessor world, BlueprintLocation start, @Nullable BoundingBox bounds, UUID dungeonID) {
 		final BlueprintDungeonRoomPlacer placer = new BlueprintDungeonRoomPlacer(UUID.randomUUID(), dungeonID);
 		getBlueprint().spawn(world, start.getPos(), start.getFacing(), bounds, placer);
 	}
@@ -247,7 +247,7 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 	}
 	
 	@Override
-	public MutableBoundingBox getBounds(BlueprintLocation entry) {
+	public BoundingBox getBounds(BlueprintLocation entry) {
 		final IBlueprint blueprint = getBlueprint();
 		BlockPos dims = blueprint.getAdjustedDimensions(entry.getFacing());
 		BlockPos offset = blueprint.getAdjustedOffset(entry.getFacing());
@@ -260,7 +260,7 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 		int maxZ = minZ + (dims.getZ()-(int) Math.signum(dims.getZ()));
 		
 		// Have to figure out real min/max ourselves
-		return new MutableBoundingBox(
+		return new BoundingBox(
 				Math.min(minX, maxX),
 				Math.min(minY, maxY),
 				Math.min(minZ, maxZ),
@@ -309,7 +309,7 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 
 	// This is a bit hacky, but all loaded rooms can be 'lobby' rooms in that the entry should be where the stairs go.
 	@Override
-	public Vector3i getStairOffset() {
-		return Vector3i.ZERO;
+	public Vec3i getStairOffset() {
+		return Vec3i.ZERO;
 	}
 }

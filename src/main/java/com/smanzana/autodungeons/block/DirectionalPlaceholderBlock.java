@@ -2,17 +2,17 @@ package com.smanzana.autodungeons.block;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.HorizontalBlock;
-import net.minecraft.block.material.Material;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.DirectionProperty;
-import net.minecraft.state.StateContainer;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
 
-public abstract class DirectionalPlaceholderBlock extends HorizontalBlock {
+public abstract class DirectionalPlaceholderBlock extends HorizontalDirectionalBlock {
 
-	public static DirectionProperty FACING = HorizontalBlock.FACING;
+	public static DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 
 	public DirectionalPlaceholderBlock() {
 		super(Block.Properties.of(Material.ICE)
@@ -23,14 +23,14 @@ public abstract class DirectionalPlaceholderBlock extends HorizontalBlock {
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(FACING);
 	}
 	
 	@Override
 	@Nullable
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
 		return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
 	}
 

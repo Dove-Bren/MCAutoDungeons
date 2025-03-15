@@ -8,7 +8,7 @@ import com.smanzana.autodungeons.command.CommandWriteRoom;
 import com.smanzana.autodungeons.network.NetworkHandler;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomLoader.BlueprintReloadListener;
 
-import net.minecraft.command.CommandSource;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.OnDatapackSyncEvent;
@@ -45,7 +45,7 @@ public class ModInit {
 	
 	public static final void registerCommands(RegisterCommandsEvent event) {
 		// Note: not in ModInit because it's not a MOD bus event. Commands get registered when data is reloaded.
-		final CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
+		final CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 		
 		CommandSpawnDungeon.register(dispatcher);
 		CommandWriteRoom.register(dispatcher);

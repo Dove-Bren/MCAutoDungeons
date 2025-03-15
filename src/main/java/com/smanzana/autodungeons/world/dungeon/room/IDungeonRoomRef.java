@@ -8,9 +8,9 @@ import javax.annotation.Nullable;
 import com.smanzana.autodungeons.world.blueprints.BlueprintLocation;
 import com.smanzana.autodungeons.world.dungeon.room.DungeonRoomRegistry.DungeonRoomRecord;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.world.IWorld;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.LevelAccessor;
 
 /**
  * Reference to a dungeon room. Used instead of passing instances themselves
@@ -54,7 +54,7 @@ public interface IDungeonRoomRef<T extends IDungeonRoom> extends IDungeonRoom {
 	////////////////////////////////////////////////////
 	
 	@Override
-	public default boolean canSpawnAt(IWorld world, BlueprintLocation start) {
+	public default boolean canSpawnAt(LevelAccessor world, BlueprintLocation start) {
 		return get().canSpawnAt(world, start);
 	}
 	
@@ -69,7 +69,7 @@ public interface IDungeonRoomRef<T extends IDungeonRoom> extends IDungeonRoom {
 	}
 	
 	@Override
-	public default MutableBoundingBox getBounds(BlueprintLocation entry) {
+	public default BoundingBox getBounds(BlueprintLocation entry) {
 		return get().getBounds(entry);
 	}
 	
@@ -124,12 +124,12 @@ public interface IDungeonRoomRef<T extends IDungeonRoom> extends IDungeonRoom {
 	}
 
 	@Override
-	public default void spawn(IWorld world, BlueprintLocation start, @Nullable MutableBoundingBox bounds, UUID dungeonID) {
+	public default void spawn(LevelAccessor world, BlueprintLocation start, @Nullable BoundingBox bounds, UUID dungeonID) {
 		get().spawn(world, start, bounds, dungeonID);
 	}
 	
 	@Override
-	public default void spawn(IWorld world, BlueprintLocation start) {
+	public default void spawn(LevelAccessor world, BlueprintLocation start) {
 		get().spawn(world, start);
 	}
 

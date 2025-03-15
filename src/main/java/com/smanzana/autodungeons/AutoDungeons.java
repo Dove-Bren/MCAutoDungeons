@@ -8,8 +8,8 @@ import com.smanzana.autodungeons.proxy.ClientProxy;
 import com.smanzana.autodungeons.proxy.CommonProxy;
 import com.smanzana.autodungeons.world.WorldKeyRegistry;
 
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -62,8 +62,8 @@ public class AutoDungeons
 		return instance.dungeonTracker;
 	}
 	
-	private void initWorldKeys(World world) {
-		worldKeys = (WorldKeyRegistry) ((ServerWorld) world).getServer().getLevel(World.OVERWORLD).getDataStorage().computeIfAbsent(WorldKeyRegistry::new,
+	private void initWorldKeys(Level world) {
+		worldKeys = (WorldKeyRegistry) ((ServerLevel) world).getServer().getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(WorldKeyRegistry::load, WorldKeyRegistry::new,
 				WorldKeyRegistry.DATA_NAME);
 	}
 	
@@ -71,7 +71,7 @@ public class AutoDungeons
 	public void onWorldLoad(WorldEvent.Load event) {
 		if (!event.getWorld().isClientSide()) {
 			// force an exception here if this is wrong
-			ServerWorld world = (ServerWorld) event.getWorld();
+			ServerLevel world = (ServerLevel) event.getWorld();
 			
 			// Do the correct initialization for persisted data
 			initWorldKeys(world);

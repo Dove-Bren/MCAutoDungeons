@@ -7,9 +7,9 @@ import java.util.UUID;
 import com.smanzana.autodungeons.util.NetUtils;
 import com.smanzana.autodungeons.world.WorldKey;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 
 public class DungeonInstance {
 	private final ResourceLocation dungeonID;
@@ -63,8 +63,8 @@ public class DungeonInstance {
 		return new DungeonInstance(dungeon, NetUtils.RandomUUID(rand), rand);
 	}
 	
-	public INBT toNBT() {
-		CompoundNBT tag = new CompoundNBT();
+	public Tag toNBT() {
+		CompoundTag tag = new CompoundTag();
 		tag.putString(NBT_DUNGEON_ID, this.dungeonID.toString());
 		tag.putUUID(NBT_INSTANCE_ID, instanceID);
 		tag.put(NBT_SMALL_KEY, this.smallKey.asNBT());
@@ -72,8 +72,8 @@ public class DungeonInstance {
 		return tag;
 	}
 	
-	public static DungeonInstance FromNBT(INBT nbt) {
-		CompoundNBT tag = (CompoundNBT) nbt;
+	public static DungeonInstance FromNBT(Tag nbt) {
+		CompoundTag tag = (CompoundTag) nbt;
 		ResourceLocation loc = new ResourceLocation(tag.getString(NBT_DUNGEON_ID));
 		UUID id = tag.getUUID(NBT_INSTANCE_ID);
 		WorldKey smallKey = WorldKey.fromNBT(tag.getCompound(NBT_SMALL_KEY));

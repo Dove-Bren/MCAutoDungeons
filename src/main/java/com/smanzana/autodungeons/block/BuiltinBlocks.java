@@ -2,11 +2,11 @@ package com.smanzana.autodungeons.block;
 
 import com.smanzana.autodungeons.AutoDungeons;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -30,7 +30,7 @@ public class BuiltinBlocks {
 	}
 	
 	private static void registerBlockItem(Block block, ResourceLocation registryName, IForgeRegistry<Item> registry) {
-		registerBlockItem(block, registryName, new Item.Properties().tab(ItemGroup.TAB_BUILDING_BLOCKS), registry);
+		registerBlockItem(block, registryName, new Item.Properties().tab(CreativeModeTab.TAB_BUILDING_BLOCKS), registry);
 	}
 	
     @SubscribeEvent

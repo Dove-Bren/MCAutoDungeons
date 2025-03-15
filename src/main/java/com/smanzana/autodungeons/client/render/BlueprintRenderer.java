@@ -3,37 +3,36 @@ package com.smanzana.autodungeons.client.render;
 import java.util.List;
 import java.util.Random;
 
-import org.lwjgl.opengl.GL11;
-
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Vector3f;
 import com.smanzana.autodungeons.item.IBlueprintHolder;
 import com.smanzana.autodungeons.world.blueprints.BlueprintBlock;
 import com.smanzana.autodungeons.world.blueprints.IBlueprint;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.model.BakedQuad;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.renderer.vertex.VertexBuffer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraftforge.client.event.DrawHighlightEvent;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.event.DrawSelectionEvent;
 import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -41,7 +40,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class BlueprintRenderer {
 	
 	private IBlueprint cachedBlueprint = null;
-	private VertexBuffer cachedRenderList = new VertexBuffer(DefaultVertexFormats.BLOCK);
+	private VertexBuffer cachedRenderList = new VertexBuffer();
 	private boolean cachedRenderDirty = true;
 	
 	public BlueprintRenderer() {
@@ -49,12 +48,12 @@ public class BlueprintRenderer {
 	}
 	
 	@SubscribeEvent
-	public void onHighlight(DrawHighlightEvent.HighlightBlock event) {
-		if (event.getTarget().getType() == RayTraceResult.Type.BLOCK) {
+	public void onHighlight(DrawSelectionEvent.HighlightBlock event) {
+		if (event.getTarget().getType() == HitResult.Type.BLOCK) {
 			Minecraft mc = Minecraft.getInstance();
-			ClientPlayerEntity player = mc.player;
-			final MatrixStack matrixStackIn = event.getMatrix();
-			final BlockRayTraceResult blockResult = (BlockRayTraceResult) event.getTarget();
+			LocalPlayer player = mc.player;
+			final PoseStack matrixStackIn = event.getMatrix();
+			final BlockHitResult blockResult = (BlockHitResult) event.getTarget();
 			final BlockPos blockPos = blockResult.getBlockPos().relative(blockResult.getDirection());
 			final ItemStack blueprintStack = this.findStackToRender(player, blockPos);
 			if (!blueprintStack.isEmpty()) {
@@ -65,8 +64,8 @@ public class BlueprintRenderer {
 				}
 				
 				if (cachedBlueprint != null) {
-					final IRenderTypeBuffer.Impl bufferIn = IRenderTypeBuffer.immediate(Tessellator.getInstance().getBuilder());
-					Vector3d center = event.getTarget().getLocation();
+					final MultiBufferSource.BufferSource bufferIn = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+					Vec3 center = event.getTarget().getLocation();
 					Direction face = Direction.getNearest((float) (center.x - player.getX()), 0f, (float) (center.z - player.getZ()));
 					
 					// Template is saved with some starting rotation. We want to render it such that the entry rotation is {face}.
@@ -81,7 +80,7 @@ public class BlueprintRenderer {
 		}
 	}
 	
-	protected ItemStack findStackToRender(PlayerEntity player, BlockPos pos) {
+	protected ItemStack findStackToRender(Player player, BlockPos pos) {
 		ItemStack ret = ItemStack.EMPTY;
 		for (ItemStack held : player.getHandSlots()) {
 			if (!held.isEmpty() && held.getItem() instanceof IBlueprintHolder) {
@@ -96,10 +95,10 @@ public class BlueprintRenderer {
 	}
 	
 	@SuppressWarnings("deprecation")
-	private void renderBlueprintPreview(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, BlockPos center, BlueprintBlock[][][] preview, Direction rotation, float partialTicks) {
+	private void renderBlueprintPreview(PoseStack matrixStackIn, MultiBufferSource bufferIn, BlockPos center, BlueprintBlock[][][] preview, Direction rotation, float partialTicks) {
 		Minecraft mc = Minecraft.getInstance();
-		Vector3d playerPos = mc.gameRenderer.getMainCamera().getPosition();//player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
-		Vector3d offset = new Vector3d(center.getX() - playerPos.x,
+		Vec3 playerPos = mc.gameRenderer.getMainCamera().getPosition();//player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
+		Vec3 offset = new Vec3(center.getX() - playerPos.x,
 				center.getY() - playerPos.y,
 				center.getZ() - playerPos.z);
 		
@@ -113,7 +112,7 @@ public class BlueprintRenderer {
 			final int depth = preview[0][0].length;
 			BufferBuilder buffer = new BufferBuilder(4096);
 			
-			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+			buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 			
 			for (int x = 0; x < width; x++)
 			for (int y = 0; y < height; y++)
@@ -133,7 +132,7 @@ public class BlueprintRenderer {
 					continue;
 				}
 				
-				IBakedModel model = null;
+				BakedModel model = null;
 				if (state != null) {
 					model = mc.getBlockRenderer().getBlockModel(state);
 				}
@@ -143,7 +142,7 @@ public class BlueprintRenderer {
 				}
 				
 				final int fakeLight = 15728880;
-				MatrixStack renderStack = new MatrixStack();
+				PoseStack renderStack = new PoseStack();
 				renderStack.pushPose();
 				renderStack.translate(xOff, yOff, zOff);
 				
@@ -189,16 +188,18 @@ public class BlueprintRenderer {
 		matrixStackIn.translate(offset.x + rotX, offset.y, offset.z + rotZ);
 		matrixStackIn.mulPose(Vector3f.YP.rotationDegrees(angle));
 		
-		mc.getTextureManager().bind(AtlasTexture.LOCATION_BLOCKS);
+		RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
 		
 		cachedRenderList.bind();
-		DefaultVertexFormats.BLOCK.setupBufferState(0);
+		DefaultVertexFormat.BLOCK.setupBufferState();
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
-		cachedRenderList.draw(matrixStackIn.last().pose(), GL11.GL_QUADS);
+		//cachedRenderList.draw(matrixStackIn.last().pose(), GL11.GL_QUADS);
+		RenderSystem.setProjectionMatrix(matrixStackIn.last().pose());
+		cachedRenderList.draw();
 		RenderSystem.disableBlend();
 		VertexBuffer.unbind();
-        DefaultVertexFormats.BLOCK.clearBufferState();
+        DefaultVertexFormat.BLOCK.clearBufferState();
 		
 		
 		matrixStackIn.popPose();
@@ -210,24 +211,24 @@ public class BlueprintRenderer {
 	}
 	private static final Random RenderModelRandom = new Random();
 	
-	private static void RenderModel(MatrixStack stack, IVertexBuilder buffer, IBakedModel model, int combinedLight, int combinedOverlay, float red, float green, float blue, float alpha) {
+	private static void RenderModel(PoseStack stack, VertexConsumer buffer, BakedModel model, int combinedLight, int combinedOverlay, float red, float green, float blue, float alpha) {
 		RenderModel(stack.last(), buffer, model, combinedLight, combinedOverlay, red, green, blue, alpha);
 	}
 	
-	private static void RenderModel(MatrixStack.Entry stackLast, IVertexBuilder buffer, IBakedModel model, int combinedLight, int combinedOverlay, float red, float green, float blue, float alpha) {
+	private static void RenderModel(PoseStack.Pose stackLast, VertexConsumer buffer, BakedModel model, int combinedLight, int combinedOverlay, float red, float green, float blue, float alpha) {
 		
 		for(Direction side : Direction.values()) {
 			List<BakedQuad> quads = model.getQuads(null, side, RenderRandom(RenderModelRandom), EmptyModelData.INSTANCE);
 			if(!quads.isEmpty()) 
 				for(BakedQuad quad : quads) {
-					buffer.addVertexData(stackLast, quad, red, green, blue, alpha, combinedLight, combinedOverlay, true);
+					buffer.putBulkData(stackLast, quad, red, green, blue, alpha, combinedLight, combinedOverlay, true);
 //					LightUtil.renderQuadColor(buffer, quad, color);
 				}
 		}
 		List<BakedQuad> quads = model.getQuads(null, null, RenderRandom(RenderModelRandom), EmptyModelData.INSTANCE);
 		if(!quads.isEmpty()) {
 			for(BakedQuad quad : quads) 
-				buffer.addVertexData(stackLast, quad, red, green, blue, alpha, combinedLight, combinedOverlay, true);
+				buffer.putBulkData(stackLast, quad, red, green, blue, alpha, combinedLight, combinedOverlay, true);
 				//LightUtil.renderQuadColor(buffer, quad, color);
 		}
 

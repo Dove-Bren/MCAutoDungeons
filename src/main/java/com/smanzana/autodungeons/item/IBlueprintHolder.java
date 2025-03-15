@@ -4,14 +4,14 @@ import javax.annotation.Nonnull;
 
 import com.smanzana.autodungeons.world.blueprints.IBlueprint;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
 
 public interface IBlueprintHolder {
 
-	public boolean hasBlueprint(PlayerEntity player, ItemStack stack);
-	public boolean shouldDisplayBlueprint(PlayerEntity player, ItemStack stack, BlockPos pos);
-	public @Nonnull IBlueprint getBlueprint(PlayerEntity player, ItemStack stack, BlockPos pos);
+	public boolean hasBlueprint(Player player, ItemStack stack);
+	public boolean shouldDisplayBlueprint(Player player, ItemStack stack, BlockPos pos);
+	public @Nonnull IBlueprint getBlueprint(Player player, ItemStack stack, BlockPos pos);
 	
 }

@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 
 import com.smanzana.autodungeons.AutoDungeons;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.Event;
 

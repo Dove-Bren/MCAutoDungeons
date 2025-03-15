@@ -7,10 +7,10 @@ import javax.annotation.Nullable;
 
 import com.smanzana.autodungeons.world.gen.DungeonStructure;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Registry;
 
 public final class DungeonRecord {
 	public final @Nonnull DungeonStructure structure;
@@ -48,8 +48,8 @@ public final class DungeonRecord {
 	//private static final String NBT_ROOMS = "rooms";
 	private static final String NBT_CURRENT_ROOM = "current_room";
 	
-	public CompoundNBT toNBT() {
-		CompoundNBT tag = new CompoundNBT();
+	public CompoundTag toNBT() {
+		CompoundTag tag = new CompoundTag();
 		tag.putString(NBT_STRUCTURE, structure.getFeatureName().toString());
 		tag.put(NBT_INSTANCE, instance.toNBT());
 		//tag.put(NBT_ROOMS, NetUtils.ToNBT(rooms, (r) -> r.toNBT(null)));
@@ -57,12 +57,12 @@ public final class DungeonRecord {
 		return tag;
 	}
 	
-	public static final DungeonRecord FromNBT(CompoundNBT nbt) {
+	public static final DungeonRecord FromNBT(CompoundTag nbt) {
 		
 		final @Nullable DungeonInstance instance = DungeonInstance.FromNBT(nbt.get(NBT_INSTANCE));
 		@SuppressWarnings("deprecation")
 		final DungeonStructure structure = (DungeonStructure) Registry.STRUCTURE_FEATURE.getOptional(
-				RegistryKey.create(Registry.STRUCTURE_FEATURE_REGISTRY, new ResourceLocation(nbt.getString(NBT_STRUCTURE))))
+				ResourceKey.create(Registry.STRUCTURE_FEATURE_REGISTRY, new ResourceLocation(nbt.getString(NBT_STRUCTURE))))
 				.orElseThrow(() -> new RuntimeException("Failed to look up structure with key " + nbt.getString(NBT_STRUCTURE)));
 		//final List<DungeonRoomInstance> rooms = NetUtils.FromNBT(new ArrayList<DungeonRoomInstance>(), (ListNBT) nbt.get(NBT_ROOMS), (tag) -> DungeonRoomInstance.fromNBT((CompoundNBT) tag));
 		final DungeonRoomInstance room = DungeonRoomInstance.fromNBT(nbt.getCompound(NBT_CURRENT_ROOM));
