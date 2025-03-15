@@ -586,6 +586,8 @@ public class Blueprint implements IBlueprint {
 			AutoDungeons.LOGGER.fatal(context.name + ": Blueprint has version we don't understand: " + context.source);
 			throw new RuntimeException(context.name + ": Could not parse blueprint version " + version + ": " + context.source);
 		}
+		
+		this.refreshPreview();
 	}
 	
 	public static Blueprint FromNBT(LoadContext context, CompoundTag nbt) {

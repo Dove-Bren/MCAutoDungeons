@@ -14,11 +14,11 @@ import com.smanzana.autodungeons.world.blueprints.Blueprint.LoadContext;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.server.command.EnumArgument;
 
@@ -78,6 +78,11 @@ public class CommandReadRoom {
 				Blueprint blueprint = Blueprint.FromNBT(new LoadContext(file.getAbsolutePath()), (CompoundTag) nbt.get("blueprint"));
 				if (blueprint != null) {
 					blueprint.spawn(player.level, event.getSelection(), facing, null, null);
+					
+					//TODO test code
+//					if (AutoDungeons.GetProxy() instanceof ClientProxy) {
+//						((ClientProxy) AutoDungeons.GetProxy()).getBlueprintRenderer().forceBlueprintPreview(blueprint);
+//					}
 				} else {
 					context.getSource().sendSuccess(new TextComponent("Room failed to load"), true);
 				}
