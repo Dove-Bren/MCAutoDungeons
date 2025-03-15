@@ -30,7 +30,7 @@ public class BuiltinBlocks {
 	}
 	
 	private static void registerBlockItem(Block block, ResourceLocation registryName, IForgeRegistry<Item> registry) {
-		registerBlockItem(block, registryName, new Item.Properties().group(ItemGroup.BUILDING_BLOCKS), registry);
+		registerBlockItem(block, registryName, new Item.Properties().tab(ItemGroup.TAB_BUILDING_BLOCKS), registry);
 	}
 	
     @SubscribeEvent

@@ -45,14 +45,14 @@ public class DungeonTracker {
 	
 	protected void setDungeon(PlayerEntity player, @Nullable DungeonRecord record) {
 		DungeonRecord prev = this.dungeonMap.put(player, record);
-		if ((prev == null || !Objects.equals(prev, record)) && !player.getEntityWorld().isRemote()) {
+		if ((prev == null || !Objects.equals(prev, record)) && !player.getCommandSenderWorld().isClientSide()) {
 			notifyPlayer((ServerPlayerEntity) player);
 		}
 	}
 	
 	protected void notifyPlayer(ServerPlayerEntity player) {
 		@Nullable DungeonRecord record = this.getDungeon(player);
-		NetworkHandler.sendTo(new DungeonTrackerUpdateMessage(player.getUniqueID(), record), player);
+		NetworkHandler.sendTo(new DungeonTrackerUpdateMessage(player.getUUID(), record), player);
 	}
 	
 	public void overrideClientDungeon(PlayerEntity player, @Nullable DungeonRecord record) {
@@ -66,7 +66,7 @@ public class DungeonTracker {
 		if (!player.isAlive()) {
 			current = null;
 		} else {
-			current = DungeonStructure.GetDungeonAt(player.getServerWorld(), player.getPosition());
+			current = DungeonStructure.GetDungeonAt(player.getLevel(), player.blockPosition());
 		}
 		setDungeon(player, current);
 	}
@@ -74,12 +74,12 @@ public class DungeonTracker {
 	@SubscribeEvent
 	public void serverTick(ServerTickEvent event) {
 		if (event.phase == TickEvent.Phase.END) {
-			for (ServerWorld world : LogicalSidedProvider.INSTANCE.<MinecraftServer>get(LogicalSide.SERVER).getWorlds()) {
-				if (world.getPlayers().isEmpty()) {
+			for (ServerWorld world : LogicalSidedProvider.INSTANCE.<MinecraftServer>get(LogicalSide.SERVER).getAllLevels()) {
+				if (world.players().isEmpty()) {
 					continue;
 				}
 				
-				for (ServerPlayerEntity player : world.getPlayers()) {
+				for (ServerPlayerEntity player : world.players()) {
 					updatePlayer(player);
 				}
 			}
@@ -99,7 +99,7 @@ public class DungeonTracker {
 				if (player != null) {
 					DungeonRecord record = getDungeon(player);
 					if (record != null) {
-						record.structure.getDungeon().clientTick(player.getEntityWorld(), player);
+						record.structure.getDungeon().clientTick(player.getCommandSenderWorld(), player);
 					}
 				}
 			}
@@ -111,7 +111,7 @@ public class DungeonTracker {
 			if (player != null) {
 				DungeonRecord record = getDungeon(player);
 				if (record != null) {
-					record.structure.getDungeon().setClientFogDensity(player.world, player, event);
+					record.structure.getDungeon().setClientFogDensity(player.level, player, event);
 				}
 			}
 		}
@@ -122,7 +122,7 @@ public class DungeonTracker {
 			if (player != null) {
 				DungeonRecord record = getDungeon(player);
 				if (record != null) {
-					record.structure.getDungeon().setClientFogColor(player.world, player, event);
+					record.structure.getDungeon().setClientFogColor(player.level, player, event);
 				}
 			}
 		}

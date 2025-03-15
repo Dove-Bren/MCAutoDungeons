@@ -25,7 +25,7 @@ public class DungeonTrackerUpdateMessage {
 		ctx.get().setPacketHandled(true);
 		ctx.get().enqueueWork(() -> {
 			final PlayerEntity player = AutoDungeons.GetProxy().getPlayer();
-			final UUID myID = player.getUniqueID();
+			final UUID myID = player.getUUID();
 			if (!myID.equals(message.id)) {
 				AutoDungeons.LOGGER.error("Received DungeonTrackerUpdateMessage message for a different player: " + message.id);
 			} else {
@@ -43,20 +43,20 @@ public class DungeonTrackerUpdateMessage {
 	}
 
 	public static DungeonTrackerUpdateMessage decode(PacketBuffer buf) {
-		UUID id = buf.readUniqueId();
+		UUID id = buf.readUUID();
 		DungeonRecord record = null;
 		if (buf.readBoolean()) {
-			record = DungeonRecord.FromNBT(buf.readCompoundTag());
+			record = DungeonRecord.FromNBT(buf.readNbt());
 		}
 		
 		return new DungeonTrackerUpdateMessage(id, record);
 	}
 
 	public static void encode(DungeonTrackerUpdateMessage msg, PacketBuffer buf) {
-		buf.writeUniqueId(msg.id);
+		buf.writeUUID(msg.id);
 		buf.writeBoolean(msg.record != null);
 		if (msg.record != null) {
-			buf.writeCompoundTag(msg.record.toNBT());
+			buf.writeNbt(msg.record.toNBT());
 		}		
 	}
 

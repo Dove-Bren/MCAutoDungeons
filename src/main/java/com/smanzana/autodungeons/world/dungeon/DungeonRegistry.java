@@ -19,13 +19,13 @@ import net.minecraftforge.registries.RegistryBuilder;
 @Mod.EventBusSubscriber(modid = AutoDungeons.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class DungeonRegistry {
 
-	public static final RegistryKey<Registry<Dungeon>> KEY_REG_DUNGEON_TYPES = RegistryKey.getOrCreateRootKey(new ResourceLocation(AutoDungeons.MODID, "dungeon_type"));
+	public static final RegistryKey<Registry<Dungeon>> KEY_REG_DUNGEON_TYPES = RegistryKey.createRegistryKey(new ResourceLocation(AutoDungeons.MODID, "dungeon_type"));
 	
 	private static IForgeRegistry<Dungeon> REGISTRY;
 	
 	@SubscribeEvent
 	public static void createRegistry(RegistryEvent.NewRegistry event) {
-		REGISTRY = new RegistryBuilder<Dungeon>().setName(KEY_REG_DUNGEON_TYPES.getLocation()).setType(Dungeon.class).setMaxID(Integer.MAX_VALUE - 1)
+		REGISTRY = new RegistryBuilder<Dungeon>().setName(KEY_REG_DUNGEON_TYPES.location()).setType(Dungeon.class).setMaxID(Integer.MAX_VALUE - 1)
 			.disableSaving().create();
 	}
 	

@@ -50,7 +50,7 @@ public final class DungeonRecord {
 	
 	public CompoundNBT toNBT() {
 		CompoundNBT tag = new CompoundNBT();
-		tag.putString(NBT_STRUCTURE, structure.getStructureName().toString());
+		tag.putString(NBT_STRUCTURE, structure.getFeatureName().toString());
 		tag.put(NBT_INSTANCE, instance.toNBT());
 		//tag.put(NBT_ROOMS, NetUtils.ToNBT(rooms, (r) -> r.toNBT(null)));
 		tag.put(NBT_CURRENT_ROOM, currentRoom.toNBT(null));
@@ -61,8 +61,8 @@ public final class DungeonRecord {
 		
 		final @Nullable DungeonInstance instance = DungeonInstance.FromNBT(nbt.get(NBT_INSTANCE));
 		@SuppressWarnings("deprecation")
-		final DungeonStructure structure = (DungeonStructure) Registry.STRUCTURE_FEATURE.getOptionalValue(
-				RegistryKey.getOrCreateKey(Registry.STRUCTURE_FEATURE_KEY, new ResourceLocation(nbt.getString(NBT_STRUCTURE))))
+		final DungeonStructure structure = (DungeonStructure) Registry.STRUCTURE_FEATURE.getOptional(
+				RegistryKey.create(Registry.STRUCTURE_FEATURE_REGISTRY, new ResourceLocation(nbt.getString(NBT_STRUCTURE))))
 				.orElseThrow(() -> new RuntimeException("Failed to look up structure with key " + nbt.getString(NBT_STRUCTURE)));
 		//final List<DungeonRoomInstance> rooms = NetUtils.FromNBT(new ArrayList<DungeonRoomInstance>(), (ListNBT) nbt.get(NBT_ROOMS), (tag) -> DungeonRoomInstance.fromNBT((CompoundNBT) tag));
 		final DungeonRoomInstance room = DungeonRoomInstance.fromNBT(nbt.getCompound(NBT_CURRENT_ROOM));

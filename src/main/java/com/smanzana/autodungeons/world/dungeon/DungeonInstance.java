@@ -66,7 +66,7 @@ public class DungeonInstance {
 	public INBT toNBT() {
 		CompoundNBT tag = new CompoundNBT();
 		tag.putString(NBT_DUNGEON_ID, this.dungeonID.toString());
-		tag.putUniqueId(NBT_INSTANCE_ID, instanceID);
+		tag.putUUID(NBT_INSTANCE_ID, instanceID);
 		tag.put(NBT_SMALL_KEY, this.smallKey.asNBT());
 		tag.put(NBT_LARGE_KEY, this.largeKey.asNBT());
 		return tag;
@@ -75,7 +75,7 @@ public class DungeonInstance {
 	public static DungeonInstance FromNBT(INBT nbt) {
 		CompoundNBT tag = (CompoundNBT) nbt;
 		ResourceLocation loc = new ResourceLocation(tag.getString(NBT_DUNGEON_ID));
-		UUID id = tag.getUniqueId(NBT_INSTANCE_ID);
+		UUID id = tag.getUUID(NBT_INSTANCE_ID);
 		WorldKey smallKey = WorldKey.fromNBT(tag.getCompound(NBT_SMALL_KEY));
 		WorldKey largeKey = WorldKey.fromNBT(tag.getCompound(NBT_LARGE_KEY));
 		return new DungeonInstance(loc, id, smallKey, largeKey);

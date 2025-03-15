@@ -36,6 +36,8 @@ import net.minecraft.world.gen.feature.template.TemplateManager;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import net.minecraft.world.gen.feature.structure.Structure.IStartFactory;
+
 public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 	
 //	public static final class NostrumDungeonConfig implements IFeatureConfig {
@@ -70,13 +72,13 @@ public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 	protected final Dungeon dungeon;
 	
 	public DungeonStructure(Dungeon dungeon) {
-		super(NoFeatureConfig.field_236558_a_);
+		super(NoFeatureConfig.CODEC);
 		this.dungeon = dungeon;
 	}
 	
 	@Override
-	protected boolean /*hasStartAt*/ func_230363_a_(ChunkGenerator generator, BiomeProvider biomeProvider, long seed, SharedSeedRandom rand, int x, int z, Biome biome, ChunkPos pos, NoFeatureConfig config) {
-		return super.func_230363_a_(generator, biomeProvider, seed, rand, x, z, biome, pos, config);
+	protected boolean /*hasStartAt*/ isFeatureChunk(ChunkGenerator generator, BiomeProvider biomeProvider, long seed, SharedSeedRandom rand, int x, int z, Biome biome, ChunkPos pos, NoFeatureConfig config) {
+		return super.isFeatureChunk(generator, biomeProvider, seed, rand, x, z, biome, pos, config);
 	}
 
 	@Override
@@ -101,7 +103,7 @@ public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 	 * This surface structure stage places the structure before plants and ores are generated.
 	 */
 	@Override
-	public GenerationStage.Decoration getDecorationStage() {
+	public GenerationStage.Decoration step() {
 		return GenerationStage.Decoration.SURFACE_STRUCTURES;
 	}
 	
@@ -151,21 +153,21 @@ public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 		}
 
 		@Override
-		public void /*init*/ func_230364_a_(DynamicRegistries registries, ChunkGenerator generator, TemplateManager templateManagerIn, int chunkX, int chunkZ, Biome biomeIn, NoFeatureConfig config) {
+		public void /*init*/ generatePieces(DynamicRegistries registries, ChunkGenerator generator, TemplateManager templateManagerIn, int chunkX, int chunkZ, Biome biomeIn, NoFeatureConfig config) {
 			// Pick random Y between 30 and 60 to start
-			final int y = this.rand.nextInt(30) + 30;
+			final int y = this.random.nextInt(30) + 30;
 			// Center in chunk to try and avoid some 'CanSpawnHere' chunk spillage
 			final int x = (chunkX * 16) + 8;
 			final int z = (chunkZ * 16) + 8;
 			
-			final BlueprintLocation start = new BlueprintLocation(new BlockPos(x, y, z), Direction.Plane.HORIZONTAL.random(this.rand));
-			List<DungeonRoomInstance> instances = this.dungeon.generate((type, cx, cz) -> generator.getHeight(cx, cz, type), start, this.instance);
+			final BlueprintLocation start = new BlueprintLocation(new BlockPos(x, y, z), Direction.Plane.HORIZONTAL.getRandomDirection(this.random));
+			List<DungeonRoomInstance> instances = this.dungeon.generate((type, cx, cz) -> generator.getBaseHeight(cx, cz, type), start, this.instance);
 			
 			for (DungeonRoomInstance instance : instances) {
-				components.add(new DungeonPiece(instance));
+				pieces.add(new DungeonPiece(instance));
 			}
 			
-			this.recalculateStructureSize();
+			this.calculateBoundingBox();
 		}
 		
 		// In 1.16, I can override this but can't override a READ anywhere that is effective.
@@ -191,17 +193,17 @@ public abstract class DungeonStructure extends Structure<NoFeatureConfig> {
 		}
 		
 		@Override
-		protected void readAdditional(CompoundNBT tagCompound) { // Note: Actually "WRITE" !!!
+		protected void addAdditionalSaveData(CompoundNBT tagCompound) { // Note: Actually "WRITE" !!!
 			DungeonPieceSerializer.write(this, tagCompound);
 		}
 
 		@Override
-		public boolean /*addComponentParts*/ func_230383_a_(ISeedReader worldIn, StructureManager manager, ChunkGenerator chunkGen,
+		public boolean /*addComponentParts*/ postProcess(ISeedReader worldIn, StructureManager manager, ChunkGenerator chunkGen,
 				Random randomIn, MutableBoundingBox structureBoundingBoxIn,
 				ChunkPos chunkPosIn, BlockPos something) {
 			
 			// Stop gap: is this the overworld?
-			if (!DimensionUtils.IsOverworld(worldIn.getWorld())) {
+			if (!DimensionUtils.IsOverworld(worldIn.getLevel())) {
 				return false;
 			}
 			

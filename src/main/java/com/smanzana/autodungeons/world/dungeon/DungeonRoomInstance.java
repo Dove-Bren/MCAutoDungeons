@@ -91,13 +91,13 @@ public class DungeonRoomInstance {
 		// If we have a key, do special key placement
 		if (this.hasLargeKey) {
 			BlueprintLocation keyLoc = template.getKeyLocation(this.entry);
-			if (bounds == null || bounds.isVecInside(keyLoc.getPos())) {
+			if (bounds == null || bounds.isInside(keyLoc.getPos())) {
 				dungeonTemplate.spawnLargeKey(this, world, keyLoc);
 			}
 		}
 		if (this.hasLargeDoor) {
 			BlueprintLocation doorLoc = template.getDoorLocation(this.entry);
-			if (bounds == null || bounds.isVecInside(doorLoc.getPos())) {
+			if (bounds == null || bounds.isInside(doorLoc.getPos())) {
 				dungeonTemplate.spawnLargeDoor(this, world, doorLoc);
 			}
 		}
@@ -110,20 +110,20 @@ public class DungeonRoomInstance {
 				Random rand = new Random(this.roomID.getLeastSignificantBits() ^ this.roomID.getMostSignificantBits());
 				List<BlueprintLocation> treasureSpots = this.template.getTreasureLocations(this.entry);
 				BlueprintLocation spot = treasureSpots.get((int) (rand.nextFloat() * treasureSpots.size()));
-				if (bounds == null || bounds.isVecInside(spot.getPos())) {
+				if (bounds == null || bounds.isInside(spot.getPos())) {
 					dungeonTemplate.spawnSmallKey(this, world, spot);
 				}
 			}
 		}
 		for (BlueprintLocation smallDoor : this.smallDoors) {
-			if (bounds == null || bounds.isVecInside(smallDoor.getPos())) {
+			if (bounds == null || bounds.isInside(smallDoor.getPos())) {
 				dungeonTemplate.spawnSmallDoor(this, world, smallDoor, bounds);
 			}
 		}
 
 		if (this.template.supportsTreasure()) {
 			for (BlueprintLocation lootSpot : this.template.getTreasureLocations(this.entry)) {
-				if (bounds != null && !bounds.isVecInside(lootSpot.getPos())) {
+				if (bounds != null && !bounds.isInside(lootSpot.getPos())) {
 					continue; // Will come back for you later <3
 				}
 				
@@ -157,7 +157,7 @@ public class DungeonRoomInstance {
 		tag.putString(NBT_TEMPLATE, this.template.getRoomID().toString());
 		tag.putBoolean(NBT_HASKEY, this.hasLargeKey);
 		tag.put(NBT_DUNGEON_INSTANCE, this.dungeonInstance.toNBT());
-		tag.putUniqueId(NBT_ROOM_ID, roomID);
+		tag.putUUID(NBT_ROOM_ID, roomID);
 		tag.putBoolean(NBT_HASSMALLKEY, this.hasSmallKey);
 		tag.putBoolean(NBT_HASDOOR, this.hasLargeDoor);
 		tag.put(NBT_SMALL_DOORS, NetUtils.ToNBT(this.smallDoors, e -> e.toNBT()));
@@ -172,7 +172,7 @@ public class DungeonRoomInstance {
 		final boolean hasKey = tag.getBoolean(NBT_HASKEY);
 		final boolean hasLargeDoor = tag.getBoolean(NBT_HASDOOR);
 		final DungeonInstance instance = DungeonInstance.FromNBT(tag.get(NBT_DUNGEON_INSTANCE));
-		final UUID roomID = tag.getUniqueId(NBT_ROOM_ID);
+		final UUID roomID = tag.getUUID(NBT_ROOM_ID);
 		
 		if (record == null) {
 			AutoDungeons.LOGGER.error("Failed to find dungeon room instance by id " + templateID);

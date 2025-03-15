@@ -31,7 +31,7 @@ public class ClientProxy extends CommonProxy {
 
 	@Override
 	public boolean hasIntegratedServer() {
-		return Minecraft.getInstance().isIntegratedServerRunning();
+		return Minecraft.getInstance().isLocalServer();
 	}
 	
 	@Override

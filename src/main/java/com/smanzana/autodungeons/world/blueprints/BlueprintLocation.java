@@ -34,7 +34,7 @@ public class BlueprintLocation {
 	public CompoundNBT toNBT() {
 		CompoundNBT tag = new CompoundNBT();
 		tag.put(NBT_POS, NBTUtil.writeBlockPos(pos));
-		tag.putByte(NBT_DIR, (byte) facing.getHorizontalIndex());
+		tag.putByte(NBT_DIR, (byte) facing.get2DDataValue());
 		return tag;
 	}
 	
@@ -43,7 +43,7 @@ public class BlueprintLocation {
 		
 		pos = NBTUtil.readBlockPos(nbt.getCompound(NBT_POS));
 		
-		Direction facing = Direction.byHorizontalIndex(nbt.getByte(NBT_DIR));
+		Direction facing = Direction.from2DDataValue(nbt.getByte(NBT_DIR));
 		return new BlueprintLocation(pos, facing);
 	}
 	

@@ -352,7 +352,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 	}
 	
 	public void clientTick(World world, PlayerEntity player) {
-		if (world.getLightFor(LightType.SKY, player.getPosition()) > 0) {
+		if (world.getBrightness(LightType.SKY, player.blockPosition()) > 0) {
 			return;
 		}
 		
@@ -361,20 +361,20 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 	
 	@SuppressWarnings("deprecation")
 	public void setClientFogDensity(World world, PlayerEntity player, EntityViewRenderEvent.FogDensity event) {
-		final int worldLight = world.getLightFor(LightType.SKY, player.getPosition());
+		final int worldLight = world.getBrightness(LightType.SKY, player.blockPosition());
 		if (worldLight > 4) {
 			return;
 		}
 		
 		event.setCanceled(true);
 		
-		if (player.isPotionActive(Effects.BLINDNESS)) {
+		if (player.hasEffect(Effects.BLINDNESS)) {
 			//final Minecraft mc = Minecraft.getInstance();
-			float farPlaneDistance = event.getRenderer().getFarPlaneDistance();
+			float farPlaneDistance = event.getRenderer().getRenderDistance();
 			//final Vector3d cameraPos = event.getInfo().getProjectedView();
-			//boolean nearFog = ((ClientWorld) entity.world).func_239132_a_().func_230493_a_(MathHelper.floor(cameraPos.getX()), MathHelper.floor(cameraPos.getY())) || mc.ingameGUI.getBossOverlay().shouldCreateFog();
+			//boolean nearFog = ((ClientWorld) entity.world).effects().isFoggyAt(MathHelper.floor(cameraPos.getX()), MathHelper.floor(cameraPos.getY())) || mc.ingameGUI.getBossOverlay().shouldCreateFog();
 			
-			int i = player.getActivePotionEffect(Effects.BLINDNESS).getDuration();
+			int i = player.getEffect(Effects.BLINDNESS).getDuration();
 			float rangeMod = MathHelper.lerp(Math.min(1.0F, (float)i / 20.0F), farPlaneDistance, 5.0F);
 			final float near;
 			final float far;
@@ -402,7 +402,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 	}
 	
 	public void setClientFogColor(World world, PlayerEntity player, EntityViewRenderEvent.FogColors event) {
-		final int worldLight = world.getLightFor(LightType.SKY, player.getPosition());
+		final int worldLight = world.getBrightness(LightType.SKY, player.blockPosition());
 		if (worldLight > 4) {
 			return;
 		}
@@ -453,13 +453,13 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 	protected static boolean CheckRoomBounds(IDungeonRoom room, BlueprintLocation entry, DungeonGenerationContext context) {
 		MutableBoundingBox bounds = room.getBounds(entry);
 		
-		if (bounds.minY < 0 || bounds.maxY < 0 || bounds.minY >= 255 || bounds.maxY >= 255) {
+		if (bounds.y0 < 0 || bounds.y1 < 0 || bounds.y0 >= 255 || bounds.y1 >= 255) {
 			return false;
 		}
 		
 		// Check existing room boxes
 		for (MutableBoundingBox box : context.boundingBoxes) {
-			if (bounds.intersectsWith(box)) {
+			if (bounds.intersects(box)) {
 				return false;
 			}
 		}
@@ -768,7 +768,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 		}
 		
 		while (rot-- > 0)
-			out = out.rotateY();
+			out = out.getClockWise();
 			
 		return new BlueprintLocation(pos, out);
 	}
@@ -782,7 +782,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 	 */
 	protected static final BlueprintLocation GetDoorAdjacent(BlueprintLocation door, boolean isEntry) {
 		return new BlueprintLocation(
-				door.getPos().offset(!isEntry ? door.getFacing().getOpposite() : door.getFacing()),
+				door.getPos().relative(!isEntry ? door.getFacing().getOpposite() : door.getFacing()),
 				door.getFacing()
 				);
 	}

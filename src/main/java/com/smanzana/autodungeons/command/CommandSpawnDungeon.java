@@ -27,7 +27,7 @@ public class CommandSpawnDungeon {
 	public static final void register(CommandDispatcher<CommandSource> dispatcher) {
 		dispatcher.register(
 				Commands.literal("spawndungeon")
-					.requires(s -> s.hasPermissionLevel(2))
+					.requires(s -> s.hasPermission(2))
 					.then(Commands.argument("type", StringArgumentType.string())
 							.suggests(CommandSpawnDungeon::GetSuggestions)
 							.executes(ctx -> execute(ctx, StringArgumentType.getString(ctx, "type")))
@@ -58,8 +58,8 @@ public class CommandSpawnDungeon {
 			CommandSpawnDungeon.rand = new Random();
 		}
 		
-		ServerPlayerEntity player = context.getSource().asPlayer();
-		dungeon.spawn(player.world, new BlueprintLocation(player.getPosition(), Direction.fromAngle(player.rotationYaw)));
+		ServerPlayerEntity player = context.getSource().getPlayerOrException();
+		dungeon.spawn(player.level, new BlueprintLocation(player.blockPosition(), Direction.fromYRot(player.yRot)));
 		
 		return 0;
 	}

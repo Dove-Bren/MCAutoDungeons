@@ -79,7 +79,7 @@ public interface IBlueprint {
 	 */
 	public default BlockPos getAdjustedOffset(Direction facing) {
 		final BlueprintLocation entry = this.getEntry();
-		BlockPos offset = entry == null ? new BlockPos(0,0,0) : entry.getPos().toImmutable();
+		BlockPos offset = entry == null ? new BlockPos(0,0,0) : entry.getPos().immutable();
 		Direction mod = IBlueprint.GetModDir(entry == null ? Direction.NORTH : entry.getFacing(), facing);
 		
 		int x = offset.getX();
@@ -144,9 +144,9 @@ public interface IBlueprint {
 
 	public static Direction GetModDir(Direction original, Direction newFacing) {
 		Direction out = Direction.NORTH;
-		int rotCount = (4 + newFacing.getHorizontalIndex() - original.getHorizontalIndex()) % 4;
+		int rotCount = (4 + newFacing.get2DDataValue() - original.get2DDataValue()) % 4;
 		while (rotCount-- > 0) {
-			out = out.rotateY();
+			out = out.getClockWise();
 		}
 		return out;
 	}

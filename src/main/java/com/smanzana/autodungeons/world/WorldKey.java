@@ -43,13 +43,13 @@ public class WorldKey {
 	
 	public CompoundNBT asNBT() {
 		CompoundNBT nbt = new CompoundNBT();
-		nbt.putUniqueId(NBT_ID, id);
+		nbt.putUUID(NBT_ID, id);
 		;//nbt.putInt(NBT_COLOR, color);
 		return nbt;
 	}
 	
 	public static WorldKey fromNBT(CompoundNBT nbt) {
-		UUID id = nbt.getUniqueId(NBT_ID);
+		UUID id = nbt.getUUID(NBT_ID);
 		;//int color = nbt.getInt(NBT_COLOR);
 		return new WorldKey(id);//, color);
 	}

@@ -34,7 +34,7 @@ public abstract class AutoReloadListener<T> extends ReloadListener<T> {
 	public T prepare(IResourceManager resourceManagerIn, IProfiler profilerIn) {
 		T builder = null;
 		
-		for (ResourceLocation rawLocation : resourceManagerIn.getAllResourceLocations(folder, this::checkPath)) {
+		for (ResourceLocation rawLocation : resourceManagerIn.listResources(folder, this::checkPath)) {
 			final ResourceLocation dataLocation = makeSubLocation(rawLocation);
 			
 			try (

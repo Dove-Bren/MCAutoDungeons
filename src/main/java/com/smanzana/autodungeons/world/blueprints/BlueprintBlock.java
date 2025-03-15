@@ -74,14 +74,14 @@ public class BlueprintBlock {
 	}
 	
 	public BlueprintBlock(IWorld world, BlockPos pos) {
-		if (world.isAirBlock(pos)) {
+		if (world.isEmptyBlock(pos)) {
 			; //leave null
 		} else {
 			this.state = world.getBlockState(pos);
-			TileEntity te = world.getTileEntity(pos);
+			TileEntity te = world.getBlockEntity(pos);
 			if (te != null) {
 				this.tileEntityData = new CompoundNBT();
-				te.write(this.tileEntityData);
+				te.save(this.tileEntityData);
 			}
 		}
 	}
@@ -168,10 +168,10 @@ public class BlueprintBlock {
 	
 	private static Direction rotate(Direction in, Direction mod) {
 		if (in != Direction.UP && in != Direction.DOWN) {
-			int count = mod.getOpposite().getHorizontalIndex();
+			int count = mod.getOpposite().get2DDataValue();
 			while (count > 0) {
 				count--;
-				in = in.rotateY();
+				in = in.getClockWise();
 			}
 		}
 		
@@ -182,50 +182,50 @@ public class BlueprintBlock {
 		if (state != null) {
 			BlockState placeState = state;
 			
-			if (facing != null && facing.getOpposite().getHorizontalIndex() != 0) {
+			if (facing != null && facing.getOpposite().get2DDataValue() != 0) {
 				
 				Block block = placeState.getBlock();
 				if (block instanceof HorizontalBlock) {
-					Direction cur = placeState.get(HorizontalBlock.HORIZONTAL_FACING);
+					Direction cur = placeState.getValue(HorizontalBlock.FACING);
 					cur = rotate(cur, facing);
-					placeState = placeState.with(HorizontalBlock.HORIZONTAL_FACING, cur);
+					placeState = placeState.setValue(HorizontalBlock.FACING, cur);
 				} else if (block instanceof WallTorchBlock) {
-					Direction cur = placeState.get(WallTorchBlock.HORIZONTAL_FACING);
+					Direction cur = placeState.getValue(WallTorchBlock.FACING);
 					cur = rotate(cur, facing);
-					placeState = placeState.with(WallTorchBlock.HORIZONTAL_FACING, cur);
+					placeState = placeState.setValue(WallTorchBlock.FACING, cur);
 				} else if (block instanceof RedstoneWallTorchBlock) {
-					Direction cur = placeState.get(RedstoneWallTorchBlock.FACING);
+					Direction cur = placeState.getValue(RedstoneWallTorchBlock.FACING);
 					cur = rotate(cur, facing);
-					placeState = placeState.with(RedstoneWallTorchBlock.FACING, cur);
+					placeState = placeState.setValue(RedstoneWallTorchBlock.FACING, cur);
 				} else if (block instanceof LadderBlock) {
-					Direction cur = placeState.get(LadderBlock.FACING);
+					Direction cur = placeState.getValue(LadderBlock.FACING);
 					cur = rotate(cur, facing);
-					placeState = placeState.with(LadderBlock.FACING, cur);
+					placeState = placeState.setValue(LadderBlock.FACING, cur);
 				} else if (block instanceof StairsBlock) {
-					Direction cur = placeState.get(StairsBlock.FACING);
+					Direction cur = placeState.getValue(StairsBlock.FACING);
 					cur = rotate(cur, facing);
-					placeState = placeState.with(StairsBlock.FACING, cur);
+					placeState = placeState.setValue(StairsBlock.FACING, cur);
 				} else if (block instanceof DirectionalBlock) {
 					// Only want to rotate horizontally
-					Direction cur = placeState.get(DirectionalBlock.FACING);
+					Direction cur = placeState.getValue(DirectionalBlock.FACING);
 					cur = rotate(cur, facing);
-					placeState = placeState.with(DirectionalBlock.FACING, cur);
+					placeState = placeState.setValue(DirectionalBlock.FACING, cur);
 				} else if (block instanceof IHorizontalBlock) {
 					// Only want to rotate horizontally
-					Direction cur = placeState.get(IHorizontalBlock.HORIZONTAL_FACING);
+					Direction cur = placeState.getValue(IHorizontalBlock.HORIZONTAL_FACING);
 					cur = rotate(cur, facing);
-					placeState = placeState.with(IHorizontalBlock.HORIZONTAL_FACING, cur);
+					placeState = placeState.setValue(IHorizontalBlock.HORIZONTAL_FACING, cur);
 				} else if (block instanceof IDirectionalBlock) {
 					// Only want to rotate horizontally
-					Direction cur = placeState.get(IDirectionalBlock.FACING);
+					Direction cur = placeState.getValue(IDirectionalBlock.FACING);
 					cur = rotate(cur, facing);
-					placeState = placeState.with(IDirectionalBlock.FACING, cur);
+					placeState = placeState.setValue(IDirectionalBlock.FACING, cur);
 				} else if (block instanceof ChestBlock) {
 					// Doesn't implement directional interfaces
 					// Only want to rotate horizontally
-					Direction cur = placeState.get(ChestBlock.FACING);
+					Direction cur = placeState.getValue(ChestBlock.FACING);
 					cur = rotate(cur, facing);
-					placeState = placeState.with(ChestBlock.FACING, cur);
+					placeState = placeState.setValue(ChestBlock.FACING, cur);
 				}
 			}
 			
@@ -251,21 +251,21 @@ public class BlueprintBlock {
 			// HACK: Reverse if special exit block cause they're backwards LOL
 			ret = ret.getOpposite();
 		} else if (block instanceof HorizontalBlock) {
-			ret = state.get(HorizontalBlock.HORIZONTAL_FACING);
+			ret = state.getValue(HorizontalBlock.FACING);
 		} else if (block instanceof WallTorchBlock) {
-			ret = state.get(WallTorchBlock.HORIZONTAL_FACING);
+			ret = state.getValue(WallTorchBlock.FACING);
 		} else if (block instanceof RedstoneWallTorchBlock) {
-			ret = state.get(RedstoneWallTorchBlock.FACING);
+			ret = state.getValue(RedstoneWallTorchBlock.FACING);
 		} else if (block instanceof LadderBlock) {
-			ret = state.get(LadderBlock.FACING);
+			ret = state.getValue(LadderBlock.FACING);
 		} else if (block instanceof StairsBlock) {
-			ret = state.get(StairsBlock.FACING);
+			ret = state.getValue(StairsBlock.FACING);
 		} else if (block instanceof DirectionalBlock) {
-			ret = state.get(DirectionalBlock.FACING);
+			ret = state.getValue(DirectionalBlock.FACING);
 		} else if (block instanceof IDirectionalBlock) {
-			ret = state.get(IDirectionalBlock.FACING);
+			ret = state.getValue(IDirectionalBlock.FACING);
 		} else if (block instanceof ChestBlock) {
-			ret = state.get(ChestBlock.FACING);
+			ret = state.getValue(ChestBlock.FACING);
 		}
 		return ret;
 	}

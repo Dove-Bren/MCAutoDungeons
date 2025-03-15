@@ -28,7 +28,7 @@ public class CommandWriteRoom {
 	public static final void register(CommandDispatcher<CommandSource> dispatcher) {
 		dispatcher.register(
 				Commands.literal("writeroom")
-					.requires(s -> s.hasPermissionLevel(2))
+					.requires(s -> s.hasPermission(2))
 					.then(Commands.argument("name", StringArgumentType.greedyString())
 						.then(Commands.argument("weight", IntegerArgumentType.integer(1))
 							.then(Commands.argument("cost", IntegerArgumentType.integer(1))
@@ -50,10 +50,10 @@ public class CommandWriteRoom {
 	}
 	
 	private static final int execute(CommandContext<CommandSource> context, final String name, final int weight, final int cost) throws CommandSyntaxException {
-		ServerPlayerEntity player = context.getSource().asPlayer();
+		ServerPlayerEntity player = context.getSource().getPlayerOrException();
 		
 		if (!player.isCreative()) {
-			context.getSource().sendFeedback(new StringTextComponent("This command must be run as a creative player"), true);
+			context.getSource().sendSuccess(new StringTextComponent("This command must be run as a creative player"), true);
 			return 1;
 		}
 		
@@ -62,7 +62,7 @@ public class CommandWriteRoom {
 		MinecraftForge.EVENT_BUS.post(event);
 		
 		if (!event.hasRegion()) {
-			context.getSource().sendFeedback(new StringTextComponent("No selected region was obtained by any providing mods"), true);
+			context.getSource().sendSuccess(new StringTextComponent("No selected region was obtained by any providing mods"), true);
 			return 1;
 		}
 		
@@ -77,24 +77,24 @@ public class CommandWriteRoom {
 		BlueprintLocation[] foundEntry = {null};
 		
 		// Look for entry marker
-		WorldUtil.ScanBlocks(player.world, minPos, maxPos, (world, pos) -> {
+		WorldUtil.ScanBlocks(player.level, minPos, maxPos, (world, pos) -> {
 			BlockState state = world.getBlockState(pos);
 			if (BlueprintDungeonRoom.IsEntry(state)) {
-				foundEntry[0] = new BlueprintLocation(pos.toImmutable().subtract(minPos), state.get(ComparatorBlock.HORIZONTAL_FACING).getOpposite());
+				foundEntry[0] = new BlueprintLocation(pos.immutable().subtract(minPos), state.getValue(ComparatorBlock.FACING).getOpposite());
 				return false;
 			}
 			
 			return true;
 		});
 		
-		Blueprint blueprint = Blueprint.Capture(player.world,
+		Blueprint blueprint = Blueprint.Capture(player.level,
 				minPos, maxPos,
 				foundEntry[0]);
 		
 		if (DungeonRoomLoader.instance().writeRoomAsFile(blueprint, name, weight, cost, new LinkedList<>())) {
-			context.getSource().sendFeedback(new StringTextComponent("Room written!"), true);
+			context.getSource().sendSuccess(new StringTextComponent("Room written!"), true);
 		} else {
-			context.getSource().sendFeedback(new StringTextComponent("An error was encountered while writing the room"), true);
+			context.getSource().sendSuccess(new StringTextComponent("An error was encountered while writing the room"), true);
 		}
 		
 		return 0;

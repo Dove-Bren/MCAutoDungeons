@@ -51,7 +51,7 @@ public class OverlayRenderer extends AbstractGui {
 		
 		if (event.getType() == ElementType.EXPERIENCE) {
 
-			renderDungeonKeys(matrixStackIn, player, window, AutoDungeons.GetDungeonTracker().getDungeon(player), mc.fontRenderer);
+			renderDungeonKeys(matrixStackIn, player, window, AutoDungeons.GetDungeonTracker().getDungeon(player), mc.font);
 		}
 	}
 	
@@ -75,17 +75,17 @@ public class OverlayRenderer extends AbstractGui {
 				final float slideProg = (float) keyIndex / (float) keyFadeDur;
 				if (smallCount > 0 || largeCount > 0) {
 					final int width = 45;
-					final int xOffset = window.getScaledWidth() - width;
+					final int xOffset = window.getGuiScaledWidth() - width;
 					final int height = 14;
-					final int yOffset = window.getScaledHeight() - height;
+					final int yOffset = window.getGuiScaledHeight() - height;
 					final int colorTop = 0x20000000;
 					final int colorBottom = 0xFF000000;
 					final int iconWidth = 12;
 					final int iconHeight = 12;
-					final int textYOffset = (iconHeight - fonter.FONT_HEIGHT) / 2;
+					final int textYOffset = (iconHeight - fonter.lineHeight) / 2;
 					Minecraft mc = Minecraft.getInstance();
 					
-					matrixStackIn.push();
+					matrixStackIn.pushPose();
 					
 					// Fade in/out
 					matrixStackIn.translate(0, (1f-slideProg) * height, 0);
@@ -98,37 +98,37 @@ public class OverlayRenderer extends AbstractGui {
 					matrixStackIn.translate(width - 2, 2, 0);
 					matrixStackIn.scale(.8f, .8f, 1f);
 					
-					mc.getTextureManager().bindTexture(ICON_COPPER_KEY);
+					mc.getTextureManager().bind(ICON_COPPER_KEY);
 					blit(matrixStackIn, -iconWidth, 0, 0, 0, iconWidth, iconWidth, iconWidth, iconWidth);
 					matrixStackIn.translate(-(iconWidth + 6), 0, 0);
 					
-					fonter.drawString(matrixStackIn, "" + smallCount, 0, textYOffset + 1, 0xFFFFFFFF);
+					fonter.draw(matrixStackIn, "" + smallCount, 0, textYOffset + 1, 0xFFFFFFFF);
 					matrixStackIn.translate(-(5 + 2), 0, 0);
 					
 					if (largeCount > 0) {
-						mc.getTextureManager().bindTexture(ICON_SILVER_KEY);
+						mc.getTextureManager().bind(ICON_SILVER_KEY);
 						blit(matrixStackIn, -iconWidth, 0, 0, 0, iconWidth, iconWidth, iconWidth, iconWidth);
 						matrixStackIn.translate(-(iconWidth + 6), 0, 0);
 						
-						fonter.drawString(matrixStackIn, "" + largeCount, 0, textYOffset + 1, 0xFFFFFFFF);
+						fonter.draw(matrixStackIn, "" + largeCount, 0, textYOffset + 1, 0xFFFFFFFF);
 						matrixStackIn.translate(-(5 + 2), 0, 0);
 					}
 					
-					matrixStackIn.pop();
+					matrixStackIn.popPose();
 				}
 			}
 		}
 	}
 	
 	private static final void drawGradientRect(MatrixStack stack, int minX, int minY, int maxX, int maxY, int colorTopLeft, int colorTopRight, int colorBottomLeft, int colorBottomRight) {
-		final Matrix4f transform = stack.getLast().getMatrix();
+		final Matrix4f transform = stack.last().pose();
 		final float[] colorTR = ColorUtil.ARGBToColor(colorTopRight);
 		final float[] colorTL = ColorUtil.ARGBToColor(colorTopLeft);
 		final float[] colorBL = ColorUtil.ARGBToColor(colorBottomLeft);
 		final float[] colorBR = ColorUtil.ARGBToColor(colorBottomRight);
 		
 		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder bufferbuilder = tessellator.getBuffer();
+		BufferBuilder bufferbuilder = tessellator.getBuilder();
 		bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
 
 		RenderSystem.disableTexture();
@@ -137,14 +137,14 @@ public class OverlayRenderer extends AbstractGui {
 		RenderSystem.disableAlphaTest();
 		RenderSystem.shadeModel(GL11.GL_SMOOTH);
 		{
-			bufferbuilder.pos(transform, minX, minY, 0).color(colorTL[0], colorTL[1], colorTL[2], colorTL[3]).endVertex();
-			bufferbuilder.pos(transform, minX, maxY, 0).color(colorBL[0], colorBL[1], colorBL[2], colorBL[3]).endVertex();
-			bufferbuilder.pos(transform, maxX, maxY, 0).color(colorBR[0], colorBR[1], colorBR[2], colorBR[3]).endVertex();
-			bufferbuilder.pos(transform, maxX, minY, 0).color(colorTR[0], colorTR[1], colorTR[2], colorTR[3]).endVertex();
+			bufferbuilder.vertex(transform, minX, minY, 0).color(colorTL[0], colorTL[1], colorTL[2], colorTL[3]).endVertex();
+			bufferbuilder.vertex(transform, minX, maxY, 0).color(colorBL[0], colorBL[1], colorBL[2], colorBL[3]).endVertex();
+			bufferbuilder.vertex(transform, maxX, maxY, 0).color(colorBR[0], colorBR[1], colorBR[2], colorBR[3]).endVertex();
+			bufferbuilder.vertex(transform, maxX, minY, 0).color(colorTR[0], colorTR[1], colorTR[2], colorTR[3]).endVertex();
 		}
 
-		bufferbuilder.finishDrawing();
-		WorldVertexBufferUploader.draw(bufferbuilder);
+		bufferbuilder.end();
+		WorldVertexBufferUploader.end(bufferbuilder);
 		RenderSystem.disableBlend();
 		RenderSystem.enableAlphaTest();
 		RenderSystem.enableTexture();

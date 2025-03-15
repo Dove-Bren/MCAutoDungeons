@@ -35,11 +35,11 @@ public class WorldKeySyncMessage {
 	}
 
 	public static WorldKeySyncMessage decode(PacketBuffer buf) {
-		return new WorldKeySyncMessage(buf.readCompoundTag());
+		return new WorldKeySyncMessage(buf.readNbt());
 	}
 
 	public static void encode(WorldKeySyncMessage msg, PacketBuffer buf) {
-		buf.writeCompoundTag(msg.keyData);
+		buf.writeNbt(msg.keyData);
 	}
 
 }

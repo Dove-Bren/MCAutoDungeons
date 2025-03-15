@@ -30,7 +30,7 @@ public class DungeonStartRoom {
 	
 	public List<DungeonRoomInstance> generateExtraPieces(IWorldHeightReader world, BlueprintLocation start, Random rand, DungeonInstance instance) {
 		// Stairs and entry room
-		BlueprintLocation adj = new BlueprintLocation(start.getPos().add(lobby.get().getStairOffset()), start.getFacing());
+		BlueprintLocation adj = new BlueprintLocation(start.getPos().offset(lobby.get().getStairOffset()), start.getFacing());
 		return Lists.newArrayList(
 				new DungeonRoomInstance(adj, stairs.get(), false, false, instance, UUID.randomUUID()),
 				new DungeonRoomInstance(stairs.get().getEntryStart(world, adj), entry, false, false, instance, UUID.randomUUID())

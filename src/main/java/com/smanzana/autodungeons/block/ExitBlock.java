@@ -10,11 +10,11 @@ import net.minecraft.world.IBlockReader;
 
 public class ExitBlock extends DirectionalPlaceholderBlock implements IExitMarker {
 	
-	private static final VoxelShape AABB = Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 2D, 16.0D);
+	private static final VoxelShape AABB = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 2D, 16.0D);
 
 	@Override
 	public Direction getFacing(BlockState state) {
-		return state.get(FACING);
+		return state.getValue(FACING);
 	}
 	
 	@Override

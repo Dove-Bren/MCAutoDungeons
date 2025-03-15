@@ -45,7 +45,7 @@ public class WorldKeyRegistry extends WorldSavedData {
 	}
 
 	@Override
-	public void read(CompoundNBT nbt) {
+	public void load(CompoundNBT nbt) {
 		keys.clear();
 		
 		ListNBT list = nbt.getList(NBT_LIST, NBT.TAG_COMPOUND);
@@ -62,7 +62,7 @@ public class WorldKeyRegistry extends WorldSavedData {
 	}
 
 	@Override
-	public CompoundNBT write(CompoundNBT compound) {
+	public CompoundNBT save(CompoundNBT compound) {
 		ListNBT list = new ListNBT();
 		for (Entry<WorldKey, Integer> entry : keys.entrySet()) {
 			if (entry.getValue() == null || entry.getValue() <= 0) {
@@ -86,7 +86,7 @@ public class WorldKeyRegistry extends WorldSavedData {
 	
 	public WorldKey addKey(WorldKey key) {
 		keys.merge(key, 1, Integer::sum);
-		this.markDirty();
+		this.setDirty();
 		broadcast();
 		return key;
 	}
@@ -111,7 +111,7 @@ public class WorldKeyRegistry extends WorldSavedData {
 			} else {
 				keys.put(key, count - 1);
 			}
-			markDirty();
+			setDirty();
 			broadcast();
 			return true;
 		}
@@ -120,7 +120,7 @@ public class WorldKeyRegistry extends WorldSavedData {
 	
 	public void clearKeys() {
 		keys.clear();
-		markDirty();
+		setDirty();
 		broadcast();
 	}
 }

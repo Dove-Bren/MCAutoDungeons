@@ -17,12 +17,12 @@ public final class LootUtil {
 	public static final Random rand = new Random();
 
 	public static final void generateLoot(IWorld world, BlockPos pos, Direction facing, ResourceLocation loottable) {
-		world.setBlockState(pos, Blocks.CHEST.getDefaultState().with(ChestBlock.FACING, facing), 2);
+		world.setBlock(pos, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, facing), 2);
 		
-		ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(pos);
+		ChestTileEntity chest = (ChestTileEntity) world.getBlockEntity(pos);
 		
 		if (chest == null) {
-			world.setBlockState(pos, Blocks.GOLD_BLOCK.getDefaultState(), 2);
+			world.setBlock(pos, Blocks.GOLD_BLOCK.defaultBlockState(), 2);
 		} else {
 			chest.setLootTable(loottable, rand.nextLong());
 		}
@@ -38,12 +38,12 @@ public final class LootUtil {
 	 */
 	public static final void createLoot(IWorld world, BlockPos pos, Direction facing,
 			NonNullList<ItemStack> loot) {
-		world.setBlockState(pos, Blocks.CHEST.getDefaultState().with(ChestBlock.FACING, facing), 2); // 2 here assumes world is generating and block updates shouldn't happen
+		world.setBlock(pos, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, facing), 2); // 2 here assumes world is generating and block updates shouldn't happen
 		
-		ChestTileEntity chest = (ChestTileEntity) world.getTileEntity(pos);
+		ChestTileEntity chest = (ChestTileEntity) world.getBlockEntity(pos);
 		int len = Math.min(27, loot.size());
 		for (int i = 0; i < len; i++) {
-			chest.setInventorySlotContents(i, loot.get(i));
+			chest.setItem(i, loot.get(i));
 		}
 	}
 	

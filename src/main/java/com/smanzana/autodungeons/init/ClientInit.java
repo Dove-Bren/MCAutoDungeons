@@ -28,7 +28,7 @@ public class ClientInit {
 	}
 	
 	private static final void registerBlockRenderLayer() {
-		RenderTypeLookup.setRenderLayer(BuiltinBlocks.entryBlock, RenderType.getCutout());
-		RenderTypeLookup.setRenderLayer(BuiltinBlocks.exitBlock, RenderType.getCutout());
+		RenderTypeLookup.setRenderLayer(BuiltinBlocks.entryBlock, RenderType.cutout());
+		RenderTypeLookup.setRenderLayer(BuiltinBlocks.exitBlock, RenderType.cutout());
 	}
 }

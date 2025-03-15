@@ -144,7 +144,7 @@ public class Blueprint implements IBlueprint {
 		for (int i = 0; i < width; i++)
 		for (int j = 0; j < height; j++)
 		for (int k = 0; k < length; k++) {
-			cursor.setPos(pos1.getX() + i, pos1.getY() + j, pos1.getZ() + k);
+			cursor.set(pos1.getX() + i, pos1.getY() + j, pos1.getZ() + k);
 			
 			BlueprintBlock block = captureBlock(context, world, cursor);
 			blocks[slot++] = block;
@@ -200,7 +200,7 @@ public class Blueprint implements IBlueprint {
 	private static final boolean isSecondPassBlock(BlueprintBlock block) {
 		if (block.getState() != null) {
 			//if (!(block.getState().isFullBlock() || block.getState().isOpaqueCube() || block.getState().isNormalCube())) {
-			if (!block.getState().isSolid()) {
+			if (!block.getState().canOcclude()) {
 				return true;
 			}
 		}
@@ -223,26 +223,26 @@ public class Blueprint implements IBlueprint {
 			placeState = block.getSpawnState(direction);
 			if (placeState != null) {
 				// TODO: add fluid state support
-				context.world.setBlockState(at, placeState, 2);
+				context.world.setBlock(at, placeState, 2);
 				if (WorldUtil.blockNeedsGenFixup(block.getState())) {
 					if (context.isWorldGen) {
-						context.world.getChunk(at).markBlockForPostprocessing(at);
+						context.world.getChunk(at).markPosForPostprocessing(at);
 					} else {
 						BlockState blockstate = context.world.getBlockState(at);
-						BlockState blockstate1 = Block.getValidBlockForPosition(blockstate, context.world, at);
-						context.world.setBlockState(at, blockstate1, 20);
+						BlockState blockstate1 = Block.updateFromNeighbourShapes(blockstate, context.world, at);
+						context.world.setBlock(at, blockstate1, 20);
 					}
 				}
 				
 				CompoundNBT tileEntityData = block.getTileEntityData();
 				if (tileEntityData != null) {
-					te = TileEntity.readTileEntity(placeState, tileEntityData.copy());
+					te = TileEntity.loadStatic(placeState, tileEntityData.copy());
 					
 					if (te != null) {
 						if (context.isWorldGen || !(context.world instanceof IServerWorld)) {
-							context.world.getChunk(at).addTileEntity(at, te);
+							context.world.getChunk(at).setBlockEntity(at, te);
 						} else {
-							((IServerWorld) context.world).getWorld().setTileEntity(at, te);
+							((IServerWorld) context.world).getLevel().setBlockEntity(at, te);
 						}
 						this.fixupTileEntity(te, direction, context);
 					} else {
@@ -251,13 +251,13 @@ public class Blueprint implements IBlueprint {
 				}
 			} else {
 				//world.removeBlock(at, false);
-				placeState = Blocks.AIR.getDefaultState();
-				context.world.setBlockState(at, placeState, 2);
+				placeState = Blocks.AIR.defaultBlockState();
+				context.world.setBlock(at, placeState, 2);
 			}
 		} else {
 			// placer handled placement. Do slower lookup of what happened
 			placeState = context.world.getBlockState(at);
-			te = context.world.getTileEntity(at);
+			te = context.world.getBlockEntity(at);
 		}
 		
 		if (context.placer != null) {
@@ -308,7 +308,7 @@ public class Blueprint implements IBlueprint {
 		// To get actual least-x leastz coordinates, we need to add offset rotated to proper orientation
 		BlockPos origin;
 		{
-			BlockPos.Mutable rotOffset = new BlockPos.Mutable().setPos(IBlueprint.ApplyRotation(offset, modDir));
+			BlockPos.Mutable rotOffset = new BlockPos.Mutable().set(IBlueprint.ApplyRotation(offset, modDir));
 			//BlockPos rotOffset = applyRotation(offset, modDir.getHorizontalIndex() % 2 == 1 ? modDir.getOpposite() : modDir);
 			
 			// To get proper offset, need to move so that our old origin (0,0) is at the real one, which is encoded in our adjusted dimensions
@@ -318,17 +318,17 @@ public class Blueprint implements IBlueprint {
 				int pz = Math.abs(adjustedDims.getZ());
 				
 				if (adjustedDims.getX() < 0) {
-					rotOffset.setPos(rotOffset.getX() + (px - 1), rotOffset.getY(), rotOffset.getZ());
+					rotOffset.set(rotOffset.getX() + (px - 1), rotOffset.getY(), rotOffset.getZ());
 				}
 				
 				if (adjustedDims.getZ() < 0) {
-					rotOffset.setPos(rotOffset.getX(), rotOffset.getY(), rotOffset.getZ() + (pz - 1));
+					rotOffset.set(rotOffset.getX(), rotOffset.getY(), rotOffset.getZ() + (pz - 1));
 				}
 				
 				adjustedDims = new BlockPos(px, adjustedDims.getY(), pz);
 			}
 			
-			origin = context.at.toImmutable().subtract(rotOffset);
+			origin = context.at.immutable().subtract(rotOffset);
 		}
 		final int chunkStartX = origin.getX() >> 4;
 		final int chunkStartZ = origin.getZ() >> 4;
@@ -345,7 +345,7 @@ public class Blueprint implements IBlueprint {
 		List<BlockPos> secondPassPos = new ArrayList<>(16 * 4);
 		
 		// Data has inverse rotation
-		final Direction dataDir = modDir.getHorizontalIndex() % 2 == 1 ? modDir.getOpposite() : modDir;
+		final Direction dataDir = modDir.get2DDataValue() % 2 == 1 ? modDir.getOpposite() : modDir;
 		
 		// Loop over all chunks from <x to >x (and <z to >z)
 		for (int cx = 0; cx <= numChunkX; cx++)
@@ -369,15 +369,15 @@ public class Blueprint implements IBlueprint {
 			for (int k = startZ; k < endZ; k++) {
 				// IWorld pos is simply chunk position + inner loop offset
 				// (j is data y, so offset to world y)
-				cursor.setPos(chunkOffsetX + i, j + origin.getY(), chunkOffsetZ + k);
+				cursor.set(chunkOffsetX + i, j + origin.getY(), chunkOffsetZ + k);
 				
-				if (context.bounds != null && !context.bounds.isVecInside(cursor)) {
+				if (context.bounds != null && !context.bounds.isInside(cursor)) {
 					continue;
 				}
 				
 				// Find data position by applying rotation to transform x and z coords into u and v data coords
 				unit = IBlueprint.ApplyRotation(new BlockPos(1, 0, 1), dataDir);
-				BlockPos dataPos = IBlueprint.ApplyRotation(cursor.toImmutable().subtract(origin), dataDir);
+				BlockPos dataPos = IBlueprint.ApplyRotation(cursor.immutable().subtract(origin), dataDir);
 				
 				// Negative values here, though, imply reflection. So make "-x" be "max - x"
 				if (unit.getX() < 0 || unit.getZ() < 0) {
@@ -420,7 +420,7 @@ public class Blueprint implements IBlueprint {
 				placeBlock(context, secondPos, modDir, block);
 			}
 			
-			context.world.getChunk(cursor).setModified(true);
+			context.world.getChunk(cursor).setUnsaved(true);
 		}
 	}
 	
@@ -517,7 +517,7 @@ public class Blueprint implements IBlueprint {
 		BlueprintBlock[] blocks = null;
 		BlueprintLocation entry = null;
 		
-		if (dims.distanceSq(0, 0, 0, false) == 0) {
+		if (dims.distSqr(0, 0, 0, false) == 0) {
 			return;
 		} else {
 			ListNBT list = nbt.getList(NBT_BLOCK_LIST, NBT.TAG_COMPOUND);
@@ -533,7 +533,7 @@ public class Blueprint implements IBlueprint {
 //				bar.step("Blocks");
 //			}
 			
-			if (masterDims.distanceSq(0, 0, 0, false) == 0) {
+			if (masterDims.distSqr(0, 0, 0, false) == 0) {
 				blocks = new BlueprintBlock[count];
 			} else {
 				blocks = new BlueprintBlock[masterDims.getX() * masterDims.getY() * masterDims.getZ()];
@@ -558,7 +558,7 @@ public class Blueprint implements IBlueprint {
 //			}
 		}
 		
-		this.dimensions = masterDims.distanceSq(0, 0, 0, false) == 0 ? dims : masterDims;
+		this.dimensions = masterDims.distSqr(0, 0, 0, false) == 0 ? dims : masterDims;
 		this.blocks = blocks;
 		this.entry = entry;
 	}

@@ -55,7 +55,7 @@ public class BlueprintRenderer {
 			ClientPlayerEntity player = mc.player;
 			final MatrixStack matrixStackIn = event.getMatrix();
 			final BlockRayTraceResult blockResult = (BlockRayTraceResult) event.getTarget();
-			final BlockPos blockPos = blockResult.getPos().offset(blockResult.getFace());
+			final BlockPos blockPos = blockResult.getBlockPos().relative(blockResult.getDirection());
 			final ItemStack blueprintStack = this.findStackToRender(player, blockPos);
 			if (!blueprintStack.isEmpty()) {
 				IBlueprint blueprint = ((IBlueprintHolder) blueprintStack.getItem()).getBlueprint(player, blueprintStack, blockPos);
@@ -65,9 +65,9 @@ public class BlueprintRenderer {
 				}
 				
 				if (cachedBlueprint != null) {
-					final IRenderTypeBuffer.Impl bufferIn = IRenderTypeBuffer.getImpl(Tessellator.getInstance().getBuffer());
-					Vector3d center = event.getTarget().getHitVec();
-					Direction face = Direction.getFacingFromVector((float) (center.x - player.getPosX()), 0f, (float) (center.z - player.getPosZ()));
+					final IRenderTypeBuffer.Impl bufferIn = IRenderTypeBuffer.immediate(Tessellator.getInstance().getBuilder());
+					Vector3d center = event.getTarget().getLocation();
+					Direction face = Direction.getNearest((float) (center.x - player.getX()), 0f, (float) (center.z - player.getZ()));
 					
 					// Template is saved with some starting rotation. We want to render it such that the entry rotation is {face}.
 					// The preview is with no rotation AKA if it was spawned with the same rotation is was catured with.
@@ -75,7 +75,7 @@ public class BlueprintRenderer {
 					face = IBlueprint.GetModDir(cachedBlueprint.getEntry().getFacing(), face);
 					
 					renderBlueprintPreview(matrixStackIn, bufferIn, blockPos, cachedBlueprint.getPreview(), face, event.getPartialTicks());
-					bufferIn.finish();
+					bufferIn.endBatch();
 				}
 			}
 		}
@@ -83,7 +83,7 @@ public class BlueprintRenderer {
 	
 	protected ItemStack findStackToRender(PlayerEntity player, BlockPos pos) {
 		ItemStack ret = ItemStack.EMPTY;
-		for (ItemStack held : player.getHeldEquipment()) {
+		for (ItemStack held : player.getHandSlots()) {
 			if (!held.isEmpty() && held.getItem() instanceof IBlueprintHolder) {
 				IBlueprintHolder holder = (IBlueprintHolder) held.getItem();
 				if (holder.hasBlueprint(player, held) && holder.shouldDisplayBlueprint(player, held, pos)) {
@@ -98,7 +98,7 @@ public class BlueprintRenderer {
 	@SuppressWarnings("deprecation")
 	private void renderBlueprintPreview(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, BlockPos center, BlueprintBlock[][][] preview, Direction rotation, float partialTicks) {
 		Minecraft mc = Minecraft.getInstance();
-		Vector3d playerPos = mc.gameRenderer.getActiveRenderInfo().getProjectedView();//player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
+		Vector3d playerPos = mc.gameRenderer.getMainCamera().getPosition();//player.getEyePosition(partialTicks).subtract(0, player.getEyeHeight(), 0);
 		Vector3d offset = new Vector3d(center.getX() - playerPos.x,
 				center.getY() - playerPos.y,
 				center.getZ() - playerPos.z);
@@ -135,23 +135,23 @@ public class BlueprintRenderer {
 				
 				IBakedModel model = null;
 				if (state != null) {
-					model = mc.getBlockRendererDispatcher().getModelForState(state);
+					model = mc.getBlockRenderer().getBlockModel(state);
 				}
 				
-				if (model == null || model == mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel()) {
-					model = mc.getBlockRendererDispatcher().getModelForState(Blocks.STONE.getDefaultState());
+				if (model == null || model == mc.getBlockRenderer().getBlockModelShaper().getModelManager().getMissingModel()) {
+					model = mc.getBlockRenderer().getBlockModel(Blocks.STONE.defaultBlockState());
 				}
 				
 				final int fakeLight = 15728880;
 				MatrixStack renderStack = new MatrixStack();
-				renderStack.push();
+				renderStack.pushPose();
 				renderStack.translate(xOff, yOff, zOff);
 				
 				RenderModel(renderStack, buffer, model, fakeLight, OverlayTexture.NO_OVERLAY, 1f, 1f, 1f, .6f);
 				
-				renderStack.pop();
+				renderStack.popPose();
 			}
-			buffer.finishDrawing();
+			buffer.end();
 			cachedRenderList.upload(buffer); // Capture what we rendered
 		}
 		
@@ -184,24 +184,24 @@ public class BlueprintRenderer {
 			break;
 		}
 		
-		matrixStackIn.push();
+		matrixStackIn.pushPose();
 		
 		matrixStackIn.translate(offset.x + rotX, offset.y, offset.z + rotZ);
-		matrixStackIn.rotate(Vector3f.YP.rotationDegrees(angle));
+		matrixStackIn.mulPose(Vector3f.YP.rotationDegrees(angle));
 		
-		mc.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
+		mc.getTextureManager().bind(AtlasTexture.LOCATION_BLOCKS);
 		
-		cachedRenderList.bindBuffer();
+		cachedRenderList.bind();
 		DefaultVertexFormats.BLOCK.setupBufferState(0);
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
-		cachedRenderList.draw(matrixStackIn.getLast().getMatrix(), GL11.GL_QUADS);
+		cachedRenderList.draw(matrixStackIn.last().pose(), GL11.GL_QUADS);
 		RenderSystem.disableBlend();
-		VertexBuffer.unbindBuffer();
+		VertexBuffer.unbind();
         DefaultVertexFormats.BLOCK.clearBufferState();
 		
 		
-		matrixStackIn.pop();
+		matrixStackIn.popPose();
 	}
 	
 	private static final Random RenderRandom(Random existing) {
@@ -211,7 +211,7 @@ public class BlueprintRenderer {
 	private static final Random RenderModelRandom = new Random();
 	
 	private static void RenderModel(MatrixStack stack, IVertexBuilder buffer, IBakedModel model, int combinedLight, int combinedOverlay, float red, float green, float blue, float alpha) {
-		RenderModel(stack.getLast(), buffer, model, combinedLight, combinedOverlay, red, green, blue, alpha);
+		RenderModel(stack.last(), buffer, model, combinedLight, combinedOverlay, red, green, blue, alpha);
 	}
 	
 	private static void RenderModel(MatrixStack.Entry stackLast, IVertexBuilder buffer, IBakedModel model, int combinedLight, int combinedOverlay, float red, float green, float blue, float alpha) {

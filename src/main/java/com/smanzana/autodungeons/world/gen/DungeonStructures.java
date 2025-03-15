@@ -20,6 +20,6 @@ public class DungeonStructures {
 	//public static void registerStructurePieceTypes(RegistryEvent.Register<IStructurePieceType> event) {
 	protected static void registerStructurePieceTypes() {
 		//event.getRegistry().register(NostrumDungeonStructure.DungeonPieceSerializer.instance);
-		IStructurePieceType.register(DungeonStructure.DungeonPieceSerializer.instance, DungeonStructure.DungeonPieceSerializer.PIECE_ID);
+		IStructurePieceType.setPieceId(DungeonStructure.DungeonPieceSerializer.instance, DungeonStructure.DungeonPieceSerializer.PIECE_ID);
 	}
 }

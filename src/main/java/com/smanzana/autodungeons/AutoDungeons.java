@@ -63,13 +63,13 @@ public class AutoDungeons
 	}
 	
 	private void initWorldKeys(World world) {
-		worldKeys = (WorldKeyRegistry) ((ServerWorld) world).getServer().getWorld(World.OVERWORLD).getSavedData().getOrCreate(WorldKeyRegistry::new,
+		worldKeys = (WorldKeyRegistry) ((ServerWorld) world).getServer().getLevel(World.OVERWORLD).getDataStorage().computeIfAbsent(WorldKeyRegistry::new,
 				WorldKeyRegistry.DATA_NAME);
 	}
 	
 	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load event) {
-		if (!event.getWorld().isRemote()) {
+		if (!event.getWorld().isClientSide()) {
 			// force an exception here if this is wrong
 			ServerWorld world = (ServerWorld) event.getWorld();
 			

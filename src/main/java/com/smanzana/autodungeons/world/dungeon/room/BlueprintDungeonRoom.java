@@ -163,7 +163,7 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 			BlockState cur = world.getBlockState(pos);
 		
 			// Check if unbreakable...
-			if (cur != null && cur.getBlockHardness(world, pos) == -1)
+			if (cur != null && cur.getDestroySpeed(world, pos) == -1)
 				return false;
 		}
 		
@@ -296,20 +296,20 @@ public class BlueprintDungeonRoom implements IDungeonRoom, IDungeonLobbyRoom {
 		// Door offset and final rotation is what's in exits rotated modDir times
 				
 		Direction doorDir = orig.getFacing();
-		int times = (modDir.getHorizontalIndex() + 2) % 4;
+		int times = (modDir.get2DDataValue() + 2) % 4;
 		while (times-- > 0) {
-			doorDir = doorDir.rotateY();
+			doorDir = doorDir.getClockWise();
 		}
 		final BlueprintLocation fromEntry = new BlueprintLocation(
 				IBlueprint.ApplyRotation(orig.getPos(), modDir),
 				doorDir
 				);
-		return new BlueprintLocation(start.getPos().add(fromEntry.getPos()), fromEntry.getFacing()); 
+		return new BlueprintLocation(start.getPos().offset(fromEntry.getPos()), fromEntry.getFacing()); 
 	}
 
 	// This is a bit hacky, but all loaded rooms can be 'lobby' rooms in that the entry should be where the stairs go.
 	@Override
 	public Vector3i getStairOffset() {
-		return Vector3i.NULL_VECTOR;
+		return Vector3i.ZERO;
 	}
 }

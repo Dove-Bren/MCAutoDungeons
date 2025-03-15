@@ -12,26 +12,26 @@ import net.minecraft.state.StateContainer;
 
 public abstract class DirectionalPlaceholderBlock extends HorizontalBlock {
 
-	public static DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
+	public static DirectionProperty FACING = HorizontalBlock.FACING;
 
 	public DirectionalPlaceholderBlock() {
-		super(Block.Properties.create(Material.ICE)
-				.hardnessAndResistance(-1.0F, 3600000.8F)
+		super(Block.Properties.of(Material.ICE)
+				.strength(-1.0F, 3600000.8F)
 				.noDrops()
-				.notSolid()
+				.noOcclusion()
 				);
 	}
 
 	@Override
-	protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-		super.fillStateContainer(builder);
+	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+		super.createBlockStateDefinition(builder);
 		builder.add(FACING);
 	}
 	
 	@Override
 	@Nullable
 	public BlockState getStateForPlacement(BlockItemUseContext context) {
-		return getDefaultState().with(FACING, context.getPlacementHorizontalFacing().getOpposite());
+		return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
 	}
 
 }
