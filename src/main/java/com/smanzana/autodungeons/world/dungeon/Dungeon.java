@@ -17,7 +17,6 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.Validate;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.smanzana.autodungeons.AutoDungeons;
 import com.smanzana.autodungeons.util.ColorUtil;
 import com.smanzana.autodungeons.util.JavaUtils;
@@ -374,29 +373,35 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 			
 			int i = player.getEffect(MobEffects.BLINDNESS).getDuration();
 			float rangeMod = Mth.lerp(Math.min(1.0F, (float)i / 20.0F), farPlaneDistance, 5.0F);
-			final float near;
 			final float far;
 			if (event.getType() == FogRenderer.FogMode.FOG_SKY) {
-				near = 0.0F;
+				//near = 0.0F;
 				far = rangeMod * 0.8F;
 			} else {
-				near = rangeMod * 0.25F;
+				//near = rangeMod * 0.25F;
 				far = rangeMod;
 			}
+			
+			// This wants to be like regular blindness, but this event doesn't allow it.
+			// we get one output param and it's 1/2 the far, and the near is always set as -8.
+			// blindness typically doesn't work that way and the near is further out.
 
 //			RenderSystem.fogStart(near);
 //			RenderSystem.fogEnd(far);
 //			RenderSystem.fogMode(GlStateManager.FogMode.LINEAR);
 //			RenderSystem.setupNvFogDistance();
-			RenderSystem.setShaderFogStart(near);
-			RenderSystem.setShaderFogEnd(far);
-			net.minecraftforge.client.ForgeHooksClient.onFogRender(event.getType(), event.getInfo(), (float) event.getRenderPartialTicks(), far);
+//			RenderSystem.setShaderFogStart(near);
+//			RenderSystem.setShaderFogEnd(far);
+//			net.minecraftforge.client.ForgeHooksClient.onFogRender(event.getType(), event.getInfo(), (float) event.getRenderPartialTicks(), far);
+			event.setDensity(far * 4); // gets halved in event handler/renderer, and starts at -8 (forced) so make more gradual
 		} else {
+			final float def = event.getRenderer().getRenderDistance(); // this actually is the water default range in blocks
+			final float maxFog = 96; // in blocks
 			if (worldLight <= 0) {
-				event.setDensity(.03f);
+				event.setDensity(maxFog);
 			} else {
 				final float prog = ((float) (4-worldLight) / 4f);
-				event.setDensity(Mth.lerp(prog, .005f, .03f));
+				event.setDensity(Mth.lerp(prog, def, maxFog));
 			}
 		}
 	}
