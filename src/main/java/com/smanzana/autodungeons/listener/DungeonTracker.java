@@ -12,18 +12,18 @@ import com.smanzana.autodungeons.network.message.DungeonTrackerUpdateMessage;
 import com.smanzana.autodungeons.world.dungeon.DungeonRecord;
 import com.smanzana.autodungeons.world.gen.DungeonStructure;
 
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.LogicalSidedProvider;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fmllegacy.LogicalSidedProvider;
 
 /**
  * Track which dungeon a player is in. Synchronized between server and client.
@@ -74,14 +74,18 @@ public class DungeonTracker {
 	@SubscribeEvent
 	public void serverTick(ServerTickEvent event) {
 		if (event.phase == TickEvent.Phase.END) {
-			for (ServerLevel world : LogicalSidedProvider.INSTANCE.<MinecraftServer>get(LogicalSide.SERVER).getAllLevels()) {
-				if (world.players().isEmpty()) {
-					continue;
+			if (LogicalSidedProvider.WORKQUEUE.get(LogicalSide.SERVER) instanceof MinecraftServer server) {
+				for (ServerLevel world : server.getAllLevels()) {
+					if (world.players().isEmpty()) {
+						continue;
+					}
+					
+					for (ServerPlayer player : world.players()) {
+						updatePlayer(player);
+					}
 				}
-				
-				for (ServerPlayer player : world.players()) {
-					updatePlayer(player);
-				}
+			} else {
+				throw new RuntimeException("need to update how we get worlds to iterate!");
 			}
 		}
 	}
@@ -106,7 +110,7 @@ public class DungeonTracker {
 		}
 		
 		@SubscribeEvent
-		public void onFogDensityCheck(EntityViewRenderEvent.FogDensity event) {
+		public void onFogDensityCheck(EntityViewRenderEvent.RenderFogEvent event) {
 			Player player = AutoDungeons.GetProxy().getPlayer();
 			if (player != null) {
 				DungeonRecord record = getDungeon(player);

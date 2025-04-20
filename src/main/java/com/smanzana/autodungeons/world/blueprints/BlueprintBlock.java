@@ -80,8 +80,7 @@ public class BlueprintBlock {
 			this.state = world.getBlockState(pos);
 			BlockEntity te = world.getBlockEntity(pos);
 			if (te != null) {
-				this.tileEntityData = new CompoundTag();
-				te.save(this.tileEntityData);
+				this.tileEntityData = te.saveWithId();
 			}
 		}
 	}

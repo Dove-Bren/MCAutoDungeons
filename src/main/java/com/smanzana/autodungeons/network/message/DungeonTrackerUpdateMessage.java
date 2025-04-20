@@ -11,7 +11,7 @@ import com.smanzana.autodungeons.world.dungeon.DungeonRecord;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 /**
  * Server is providing an update to a player's dungeon status

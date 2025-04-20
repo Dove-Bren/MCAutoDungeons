@@ -11,6 +11,7 @@ import com.smanzana.autodungeons.util.WorldUtil;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
@@ -517,7 +518,7 @@ public class Blueprint implements IBlueprint {
 		BlueprintBlock[] blocks = null;
 		BlueprintLocation entry = null;
 		
-		if (dims.distSqr(0, 0, 0, false) == 0) {
+		if (dims.distSqr(Vec3i.ZERO) == 0) {
 			return;
 		} else {
 			ListTag list = nbt.getList(NBT_BLOCK_LIST, Tag.TAG_COMPOUND);
@@ -533,7 +534,7 @@ public class Blueprint implements IBlueprint {
 //				bar.step("Blocks");
 //			}
 			
-			if (masterDims.distSqr(0, 0, 0, false) == 0) {
+			if (masterDims.distSqr(Vec3i.ZERO) == 0) {
 				blocks = new BlueprintBlock[count];
 			} else {
 				blocks = new BlueprintBlock[masterDims.getX() * masterDims.getY() * masterDims.getZ()];
@@ -558,7 +559,7 @@ public class Blueprint implements IBlueprint {
 //			}
 		}
 		
-		this.dimensions = masterDims.distSqr(0, 0, 0, false) == 0 ? dims : masterDims;
+		this.dimensions = masterDims.distSqr(Vec3i.ZERO) == 0 ? dims : masterDims;
 		this.blocks = blocks;
 		this.entry = entry;
 	}

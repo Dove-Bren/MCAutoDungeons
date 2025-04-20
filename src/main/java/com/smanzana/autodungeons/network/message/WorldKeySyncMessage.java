@@ -7,7 +7,7 @@ import com.smanzana.autodungeons.world.WorldKeyRegistry;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 /**
  * Server is sending updated world key information to a client

@@ -42,6 +42,7 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
+import net.minecraftforge.client.event.EntityViewRenderEvent.RenderFogEvent;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 
 public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
@@ -357,7 +358,7 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 		spawnDungeonParticles(world, player);
 	}
 	
-	public void setClientFogDensity(Level world, Player player, EntityViewRenderEvent.FogDensity event) {
+	public void setClientFogDensity(Level world, Player player, RenderFogEvent event) {
 		final int worldLight = world.getBrightness(LightLayer.SKY, player.blockPosition());
 		if (worldLight > 4) {
 			return;
@@ -374,17 +375,18 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 			int i = player.getEffect(MobEffects.BLINDNESS).getDuration();
 			float rangeMod = Mth.lerp(Math.min(1.0F, (float)i / 20.0F), farPlaneDistance, 5.0F);
 			final float far;
-			if (event.getType() == FogRenderer.FogMode.FOG_SKY) {
-				//near = 0.0F;
+			final float near;
+			if (event.getMode() == FogRenderer.FogMode.FOG_SKY) {
+				near = 0.0F;
 				far = rangeMod * 0.8F;
 			} else {
-				//near = rangeMod * 0.25F;
+				near = rangeMod * 0.25F;
 				far = rangeMod;
 			}
 			
-			// This wants to be like regular blindness, but this event doesn't allow it.
-			// we get one output param and it's 1/2 the far, and the near is always set as -8.
-			// blindness typically doesn't work that way and the near is further out.
+			event.setNearPlaneDistance(near);
+			event.setFarPlaneDistance(far);
+			
 
 //			RenderSystem.fogStart(near);
 //			RenderSystem.fogEnd(far);
@@ -393,16 +395,17 @@ public abstract class Dungeon extends ForgeRegistryEntry<Dungeon> {
 //			RenderSystem.setShaderFogStart(near);
 //			RenderSystem.setShaderFogEnd(far);
 //			net.minecraftforge.client.ForgeHooksClient.onFogRender(event.getType(), event.getInfo(), (float) event.getRenderPartialTicks(), far);
-			event.setDensity(far * 4); // gets halved in event handler/renderer, and starts at -8 (forced) so make more gradual
+			//event.setDensity(far * 4); // gets halved in event handler/renderer, and starts at -8 (forced) so make more gradual
 		} else {
 			final float def = event.getRenderer().getRenderDistance(); // this actually is the water default range in blocks
-			final float maxFog = 96; // in blocks
+			final float maxFog = 32; // in blocks
 			if (worldLight <= 0) {
-				event.setDensity(maxFog);
+				event.setFarPlaneDistance(maxFog);
 			} else {
 				final float prog = ((float) (4-worldLight) / 4f);
-				event.setDensity(Mth.lerp(prog, def, maxFog));
+				event.setFarPlaneDistance(Mth.lerp(prog, def, maxFog));
 			}
+			event.setNearPlaneDistance(5f);
 		}
 	}
 	

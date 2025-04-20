@@ -50,7 +50,7 @@ public final class DungeonRecord {
 	
 	public CompoundTag toNBT() {
 		CompoundTag tag = new CompoundTag();
-		tag.putString(NBT_STRUCTURE, structure.getFeatureName().toString());
+		tag.putString(NBT_STRUCTURE, structure.getRegistryName().toString());
 		tag.put(NBT_INSTANCE, instance.toNBT());
 		//tag.put(NBT_ROOMS, NetUtils.ToNBT(rooms, (r) -> r.toNBT(null)));
 		tag.put(NBT_CURRENT_ROOM, currentRoom.toNBT(null));

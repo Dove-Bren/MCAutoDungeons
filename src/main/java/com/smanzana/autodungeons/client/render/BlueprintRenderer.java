@@ -80,7 +80,7 @@ public class BlueprintRenderer {
 				}
 				
 				if (cachedBlueprint != null) {
-					final PoseStack matrixStackIn = event.getMatrix();
+					final PoseStack matrixStackIn = event.getPoseStack();
 					Matrix4f proj = RenderSystem.getProjectionMatrix();
 					final MultiBufferSource.BufferSource bufferIn = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
 					Vec3 center = event.getTarget().getLocation();

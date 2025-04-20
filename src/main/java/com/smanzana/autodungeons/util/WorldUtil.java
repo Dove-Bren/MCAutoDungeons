@@ -11,23 +11,23 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableSet;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.WorldGenRegion;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.StairBlock;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.core.SectionPos;
-import net.minecraft.core.Vec3i;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.Level;
-import net.minecraft.server.level.WorldGenRegion;
-import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
-import net.minecraft.server.level.ServerLevel;
 
 public class WorldUtil {
 
@@ -262,8 +262,8 @@ public class WorldUtil {
 	 * 					 AKA check one giant bounding box for the whole structure instead of checking if the position is actually in a structure piece.
 	 * @return
 	 */
-	public static final boolean IsInStructure(ServerLevel world, BlockPos pos, StructureFeature<?> structure, boolean insideCheck) {
-		return GetContainingStructure(world, pos, structure, insideCheck).isValid();
+	public static final boolean IsInStructure(ServerLevel world, BlockPos pos, ConfiguredStructureFeature<?, ?> structure) {
+		return GetContainingStructure(world, pos, structure).isValid();
 	}
 	
 	/**
@@ -275,12 +275,12 @@ public class WorldUtil {
 	 * 					 AKA check one giant bounding box for the whole structure instead of checking if the position is actually in a structure piece.
 	 * @return
 	 */
-	public static final @Nonnull StructureStart<?> GetContainingStructure(ServerLevel world, BlockPos pos, StructureFeature<?> structure, boolean insideCheck) {
-		return world.structureFeatureManager().getStructureAt(pos, insideCheck, structure);
+	public static final @Nonnull StructureStart GetContainingStructure(ServerLevel world, BlockPos pos, ConfiguredStructureFeature<?, ?> structure) {
+		return world.structureFeatureManager().getStructureWithPieceAt(pos, structure);
 	}
 	
-	public static final @Nullable StructurePiece GetContainingStructurePiece(ServerLevel world, BlockPos pos, StructureFeature<?> structure, boolean insideCheck) {
-		return world.structureFeatureManager().startsForFeature(SectionPos.of(pos), structure).filter((start) -> {
+	public static final @Nullable StructurePiece GetContainingStructurePiece(ServerLevel world, BlockPos pos, ConfiguredStructureFeature<?, ?> structure) {
+		return world.structureFeatureManager().startsForFeature(SectionPos.of(pos), structure).stream().filter((start) -> {
 	         return start.getBoundingBox().isInside(pos);
 	      }).flatMap(start -> start.getPieces().stream()).filter(piece -> piece.getBoundingBox().isInside(pos))
 				.findFirst().orElse(null);
